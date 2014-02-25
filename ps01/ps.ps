@@ -1,0 +1,2166 @@
+%!PS-Adobe-3.0
+%%BoundingBox: 18 36 594 756
+%%Title: letter
+%%Creator: GNU Enscript 1.6.5.2
+%%CreationDate: Mon Feb 10 10:31:35 2014
+%%Orientation: Portrait
+%%Pages: (atend)
+%%DocumentMedia: Letter 612 792 0 () ()
+%%DocumentNeededResources: (atend)
+%%EndComments
+%%BeginProlog
+%%BeginResource: procset Enscript-Prolog 1.6.5 2
+%
+% Procedures.
+%
+
+/_S {	% save current state
+  /_s save def
+} def
+/_R {	% restore from saved state
+  _s restore
+} def
+
+/S {	% showpage protecting gstate
+  gsave
+  showpage
+  grestore
+} bind def
+
+/MF {	% fontname newfontname -> -	make a new encoded font
+  /newfontname exch def
+  /fontname exch def
+
+  /fontdict fontname findfont def
+  /newfont fontdict maxlength dict def
+
+  fontdict {
+    exch
+    dup /FID eq {
+      % skip FID pair
+      pop pop
+    } {
+      % copy to the new font dictionary
+      exch newfont 3 1 roll put
+    } ifelse
+  } forall
+
+  newfont /FontName newfontname put
+
+  % insert only valid encoding vectors
+  encoding_vector length 256 eq {
+    newfont /Encoding encoding_vector put
+  } if
+
+  newfontname newfont definefont pop
+} def
+
+/MF_PS { % fontname newfontname -> -	make a new font preserving its enc
+  /newfontname exch def
+  /fontname exch def
+
+  /fontdict fontname findfont def
+  /newfont fontdict maxlength dict def
+
+  fontdict {
+    exch
+    dup /FID eq {
+      % skip FID pair
+      pop pop
+    } {
+      % copy to the new font dictionary
+      exch newfont 3 1 roll put
+    } ifelse
+  } forall
+
+  newfont /FontName newfontname put
+
+  newfontname newfont definefont pop
+} def
+
+/SF { % fontname width height -> -	set a new font
+  /height exch def
+  /width exch def
+
+  findfont
+  [width 0 0 height 0 0] makefont setfont
+} def
+
+/SUF { % fontname width height -> -	set a new user font
+  /height exch def
+  /width exch def
+
+  /F-gs-user-font MF
+  /F-gs-user-font width height SF
+} def
+
+/SUF_PS { % fontname width height -> -	set a new user font preserving its enc
+  /height exch def
+  /width exch def
+
+  /F-gs-user-font MF_PS
+  /F-gs-user-font width height SF
+} def
+
+/M {moveto} bind def
+/s {show} bind def
+
+/Box {	% x y w h -> -			define box path
+  /d_h exch def /d_w exch def /d_y exch def /d_x exch def
+  d_x d_y  moveto
+  d_w 0 rlineto
+  0 d_h rlineto
+  d_w neg 0 rlineto
+  closepath
+} def
+
+/bgs {	% x y height blskip gray str -> -	show string with bg color
+  /str exch def
+  /gray exch def
+  /blskip exch def
+  /height exch def
+  /y exch def
+  /x exch def
+
+  gsave
+    x y blskip sub str stringwidth pop height Box
+    gray setgray
+    fill
+  grestore
+  x y M str s
+} def
+
+/bgcs { % x y height blskip red green blue str -> -  show string with bg color
+  /str exch def
+  /blue exch def
+  /green exch def
+  /red exch def
+  /blskip exch def
+  /height exch def
+  /y exch def
+  /x exch def
+
+  gsave
+    x y blskip sub str stringwidth pop height Box
+    red green blue setrgbcolor
+    fill
+  grestore
+  x y M str s
+} def
+
+% Highlight bars.
+/highlight_bars {	% nlines lineheight output_y_margin gray -> -
+  gsave
+    setgray
+    /ymarg exch def
+    /lineheight exch def
+    /nlines exch def
+
+    % This 2 is just a magic number to sync highlight lines to text.
+    0 d_header_y ymarg sub 2 sub translate
+
+    /cw d_output_w cols div def
+    /nrows d_output_h ymarg 2 mul sub lineheight div cvi def
+
+    % for each column
+    0 1 cols 1 sub {
+      cw mul /xp exch def
+
+      % for each rows
+      0 1 nrows 1 sub {
+        /rn exch def
+        rn lineheight mul neg /yp exch def
+        rn nlines idiv 2 mod 0 eq {
+	  % Draw highlight bar.  4 is just a magic indentation.
+	  xp 4 add yp cw 8 sub lineheight neg Box fill
+	} if
+      } for
+    } for
+
+  grestore
+} def
+
+% Line highlight bar.
+/line_highlight {	% x y width height gray -> -
+  gsave
+    /gray exch def
+    Box gray setgray fill
+  grestore
+} def
+
+% Column separator lines.
+/column_lines {
+  gsave
+    .1 setlinewidth
+    0 d_footer_h translate
+    /cw d_output_w cols div def
+    1 1 cols 1 sub {
+      cw mul 0 moveto
+      0 d_output_h rlineto stroke
+    } for
+  grestore
+} def
+
+% Column borders.
+/column_borders {
+  gsave
+    .1 setlinewidth
+    0 d_footer_h moveto
+    0 d_output_h rlineto
+    d_output_w 0 rlineto
+    0 d_output_h neg rlineto
+    closepath stroke
+  grestore
+} def
+
+% Do the actual underlay drawing
+/draw_underlay {
+  ul_style 0 eq {
+    ul_str true charpath stroke
+  } {
+    ul_str show
+  } ifelse
+} def
+
+% Underlay
+/underlay {	% - -> -
+  gsave
+    0 d_page_h translate
+    d_page_h neg d_page_w atan rotate
+
+    ul_gray setgray
+    ul_font setfont
+    /dw d_page_h dup mul d_page_w dup mul add sqrt def
+    ul_str stringwidth pop dw exch sub 2 div ul_h_ptsize -2 div moveto
+    draw_underlay
+  grestore
+} def
+
+/user_underlay {	% - -> -
+  gsave
+    ul_x ul_y translate
+    ul_angle rotate
+    ul_gray setgray
+    ul_font setfont
+    0 0 ul_h_ptsize 2 div sub moveto
+    draw_underlay
+  grestore
+} def
+
+% Page prefeed
+/page_prefeed {		% bool -> -
+  statusdict /prefeed known {
+    statusdict exch /prefeed exch put
+  } {
+    pop
+  } ifelse
+} def
+
+% Wrapped line markers
+/wrapped_line_mark {	% x y charwith charheight type -> -
+  /type exch def
+  /h exch def
+  /w exch def
+  /y exch def
+  /x exch def
+
+  type 2 eq {
+    % Black boxes (like TeX does)
+    gsave
+      0 setlinewidth
+      x w 4 div add y M
+      0 h rlineto w 2 div 0 rlineto 0 h neg rlineto
+      closepath fill
+    grestore
+  } {
+    type 3 eq {
+      % Small arrows
+      gsave
+        .2 setlinewidth
+        x w 2 div add y h 2 div add M
+        w 4 div 0 rlineto
+        x w 4 div add y lineto stroke
+
+        x w 4 div add w 8 div add y h 4 div add M
+        x w 4 div add y lineto
+	w 4 div h 8 div rlineto stroke
+      grestore
+    } {
+      % do nothing
+    } ifelse
+  } ifelse
+} def
+
+% EPSF import.
+
+/BeginEPSF {
+  /b4_Inc_state save def    		% Save state for cleanup
+  /dict_count countdictstack def	% Count objects on dict stack
+  /op_count count 1 sub def		% Count objects on operand stack
+  userdict begin
+  /showpage { } def
+  0 setgray 0 setlinecap
+  1 setlinewidth 0 setlinejoin
+  10 setmiterlimit [ ] 0 setdash newpath
+  /languagelevel where {
+    pop languagelevel
+    1 ne {
+      false setstrokeadjust false setoverprint
+    } if
+  } if
+} bind def
+
+/EndEPSF {
+  count op_count sub { pos } repeat	% Clean up stacks
+  countdictstack dict_count sub { end } repeat
+  b4_Inc_state restore
+} bind def
+
+% Check PostScript language level.
+/languagelevel where {
+  pop /gs_languagelevel languagelevel def
+} {
+  /gs_languagelevel 1 def
+} ifelse
+%%EndResource
+%%BeginResource: procset Enscript-Encoding-88591 1.6.5 2
+/encoding_vector [
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/space        	/exclam       	/quotedbl     	/numbersign   	
+/dollar       	/percent      	/ampersand    	/quoteright   	
+/parenleft    	/parenright   	/asterisk     	/plus         	
+/comma        	/hyphen       	/period       	/slash        	
+/zero         	/one          	/two          	/three        	
+/four         	/five         	/six          	/seven        	
+/eight        	/nine         	/colon        	/semicolon    	
+/less         	/equal        	/greater      	/question     	
+/at           	/A            	/B            	/C            	
+/D            	/E            	/F            	/G            	
+/H            	/I            	/J            	/K            	
+/L            	/M            	/N            	/O            	
+/P            	/Q            	/R            	/S            	
+/T            	/U            	/V            	/W            	
+/X            	/Y            	/Z            	/bracketleft  	
+/backslash    	/bracketright 	/asciicircum  	/underscore   	
+/quoteleft    	/a            	/b            	/c            	
+/d            	/e            	/f            	/g            	
+/h            	/i            	/j            	/k            	
+/l            	/m            	/n            	/o            	
+/p            	/q            	/r            	/s            	
+/t            	/u            	/v            	/w            	
+/x            	/y            	/z            	/braceleft    	
+/bar          	/braceright   	/tilde        	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/space        	/exclamdown   	/cent         	/sterling     	
+/currency     	/yen          	/brokenbar    	/section      	
+/dieresis     	/copyright    	/ordfeminine  	/guillemotleft	
+/logicalnot   	/hyphen       	/registered   	/macron       	
+/degree       	/plusminus    	/twosuperior  	/threesuperior	
+/acute        	/mu           	/paragraph    	/bullet       	
+/cedilla      	/onesuperior  	/ordmasculine 	/guillemotright	
+/onequarter   	/onehalf      	/threequarters	/questiondown 	
+/Agrave       	/Aacute       	/Acircumflex  	/Atilde       	
+/Adieresis    	/Aring        	/AE           	/Ccedilla     	
+/Egrave       	/Eacute       	/Ecircumflex  	/Edieresis    	
+/Igrave       	/Iacute       	/Icircumflex  	/Idieresis    	
+/Eth          	/Ntilde       	/Ograve       	/Oacute       	
+/Ocircumflex  	/Otilde       	/Odieresis    	/multiply     	
+/Oslash       	/Ugrave       	/Uacute       	/Ucircumflex  	
+/Udieresis    	/Yacute       	/Thorn        	/germandbls   	
+/agrave       	/aacute       	/acircumflex  	/atilde       	
+/adieresis    	/aring        	/ae           	/ccedilla     	
+/egrave       	/eacute       	/ecircumflex  	/edieresis    	
+/igrave       	/iacute       	/icircumflex  	/idieresis    	
+/eth          	/ntilde       	/ograve       	/oacute       	
+/ocircumflex  	/otilde       	/odieresis    	/divide       	
+/oslash       	/ugrave       	/uacute       	/ucircumflex  	
+/udieresis    	/yacute       	/thorn        	/ydieresis    	
+] def
+%%EndResource
+%%EndProlog
+%%BeginSetup
+%%IncludeResource: font Courier-Bold
+%%IncludeResource: font Courier
+/HFpt_w 10 def
+/HFpt_h 10 def
+/Courier /HF-gs-font MF
+/HF /HF-gs-font findfont [HFpt_w 0 0 HFpt_h 0 0] makefont def
+/Courier-Bold /F-gs-font MF
+/F-gs-font 11 11 SF
+/#copies 1 def
+% Pagedevice definitions:
+gs_languagelevel 1 gt {
+  <<
+    /PageSize [612 792] 
+  >> setpagedevice
+} if
+%%BeginResource: procset Enscript-Header-simple 1.6.5 2
+
+/do_header {	% print default simple header
+  gsave
+    d_header_x d_header_y HFpt_h 3 div add translate
+
+    HF setfont
+    user_header_p {
+      5 0 moveto user_header_left_str show
+
+      d_header_w user_header_center_str stringwidth pop sub 2 div
+      0 moveto user_header_center_str show
+
+      d_header_w user_header_right_str stringwidth pop sub 5 sub
+      0 moveto user_header_right_str show
+    } {
+      5 0 moveto fname show
+      45 0 rmoveto fmodstr show
+      45 0 rmoveto pagenumstr show
+    } ifelse
+
+  grestore
+} def
+%%EndResource
+/d_page_w 576 def
+/d_page_h 720 def
+/d_header_x 0 def
+/d_header_y 705 def
+/d_header_w 576 def
+/d_header_h 15 def
+/d_footer_x 0 def
+/d_footer_y 0 def
+/d_footer_w 576 def
+/d_footer_h 0 def
+/d_output_w 576 def
+/d_output_h 705 def
+/cols 1 def
+%%EndSetup
+%%Page: (1) 1
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 1 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Mon Feb 10 10:31:22 2014) def
+/pagenumstr (1) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+44.6 679 M
+(                MASSACHVSETTS INSTITVTE OF TECHNOLOGY) s
+44.6 667 M
+(      Department of Electrical Engineering and Computer Science) s
+44.6 643 M
+(                       6.945/6.S081 Spring 2014) s
+44.6 631 M
+(                            Problem Set 1) s
+44.6 607 M
+(  Issued: Wed. 12 Feb. 2014                    Due: Wed. 19 Feb. 2014) s
+44.6 583 M
+(Readings: ) s
+44.6 571 M
+(    Review SICP chapter 1 \(especially section 1.3\)) s
+44.6 559 M
+(    MIT/GNU Scheme documentation, sections 5 and 6 ) s
+44.6 547 M
+(      \(characters and strings\)) s
+44.6 535 M
+(    Debian GNU/Linux info on regular expressions ) s
+44.6 523 M
+(      from the grep man page \(attached\).  This is sane.) s
+44.6 499 M
+(Code: ) s
+44.6 487 M
+(    regexp.scm, tests.txt \(both attached\)) s
+44.6 475 M
+(    Windows grep: http://gnuwin32.sourceforge.net/packages/grep.htm) s
+44.6 451 M
+(Documentation:) s
+44.6 439 M
+( The MIT/GNU Scheme installation and documentation can) s
+44.6 427 M
+(    be found online at http://www.gnu.org/software/mit-scheme/) s
+44.6 415 M
+(    The reference manual is in:) s
+44.6 403 M
+( http://www.gnu.org/software/mit-scheme/documentation/mit-scheme-ref/) s
+44.6 379 M
+(    The \(insane\) POSIX manual page for regular expressions:) s
+44.6 367 M
+( http://www.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap09.html) s
+44.6 331 M
+(                         Regular Expressions) s
+44.6 307 M
+(Regular expressions are ubiquitous.  On the surface, regular) s
+44.6 295 M
+(expressions look like a combinator language, because expression) s
+44.6 283 M
+(fragments can be combined to make more complex expressions.  But the) s
+44.6 271 M
+(meaning of a fragment is highly dependent on the expression it is) s
+44.6 259 M
+(embedded in.  For example, to include a caret character in a bracket) s
+44.6 247 M
+(expression, [...], it must not be in the first character position.) s
+44.6 235 M
+(If the caret appears after the first character it is just an ordinary) s
+44.6 223 M
+(character, but if it appears as the first character it negates the) s
+44.6 211 M
+(meaning of the bracket expression.  For example, a bracket expression) s
+44.6 199 M
+(may not contain just a caret.) s
+44.6 175 M
+(So the syntax of the regular-expression language is awful.  There are) s
+44.6 163 M
+(various incompatable forms of the language and the quotation) s
+44.6 151 M
+(conventions are baroquen [sic].  Nevertheless, there is a great deal) s
+44.6 139 M
+(of useful software, for example grep, that uses regular expressions to) s
+44.6 127 M
+(specify the desired behavior.) s
+_R
+S
+%%Page: (2) 2
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 2 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Mon Feb 10 10:31:22 2014) def
+/pagenumstr (2) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+44.6 679 M
+(Although regular-expression systems are derived from a perfectly good) s
+44.6 667 M
+(mathematical formalism, the particular choices made by implementers to) s
+44.6 655 M
+(expand the formalism into useful software systems are often) s
+44.6 643 M
+(disastrous: the quotation conventions adopted are highly irregular;) s
+44.6 631 M
+(the egregious misuse of parentheses, both for grouping and for) s
+44.6 619 M
+(backward reference, is a miracle to behold.  In addition, attempts to) s
+44.6 607 M
+(increase the expressive power and address shortcomings of earlier) s
+44.6 595 M
+(designs have led to a proliferation of incompatible derivative) s
+44.6 583 M
+(languages.) s
+44.6 559 M
+(Part of the value of this problem set is to experience how bad things) s
+44.6 547 M
+(can be.  Here we will invent both a combinator language for specifying) s
+44.6 535 M
+(regular expressions and a means of translating this language to) s
+44.6 523 M
+(conventional regular-expression syntax.  The application is to be able) s
+44.6 511 M
+(to use the capabilities of systems like grep from inside the Scheme) s
+44.6 499 M
+(environment.  This will give us all the advantages of a combinator) s
+44.6 487 M
+(language.  It will have a clean, modular description while retaining) s
+44.6 475 M
+(the ability to use existing tools.  Users of this language will have) s
+44.6 463 M
+(nothing to grep about, unless they value concise expression over) s
+44.6 451 M
+(readability.) s
+44.6 427 M
+(As with any language there are primitives, means of combination, and) s
+44.6 415 M
+(means of abstraction.  Our language allows the construction of) s
+44.6 403 M
+(patterns that utilities like grep can match against character-string) s
+44.6 391 M
+(data.  Because this language is embedded in Scheme we inherit all of) s
+44.6 379 M
+(the power of Scheme: we can use Scheme constructs to combine patterns) s
+44.6 367 M
+(and Scheme procedures to abstract them.) s
+44.6 331 M
+(               A regular expression combinator language) s
+44.6 307 M
+(Patterns are built out of primitive patterns.  The primitive pattern) s
+44.6 295 M
+(elements are:) s
+44.6 271 M
+( \(r:dot\)  matches any character except newline) s
+44.6 247 M
+( \(r:bol\)  matches only the beginning of a line) s
+44.6 223 M
+( \(r:eol\)  matches only the end of a line) s
+44.6 199 M
+( \(r:quote <string>\)  matches the given string) s
+44.6 175 M
+( \(r:char-from <char-set>\)) s
+44.6 163 M
+(     matches one character that is in the given string) s
+44.6 139 M
+( \(r:char-not-from <char-set>\)) s
+44.6 127 M
+(     matches one character that is not in the given string) s
+_R
+S
+%%Page: (3) 3
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 3 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Mon Feb 10 10:31:22 2014) def
+/pagenumstr (3) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+44.6 679 M
+(Patterns can be combined to make compound patterns:) s
+44.6 655 M
+( \(r:seq <pattern> ...\)) s
+44.6 643 M
+(     This pattern matches each of the argument patterns in sequence,) s
+44.6 631 M
+(     from left to right) s
+44.6 607 M
+( \(r:alt <pattern> ...\)  ) s
+44.6 595 M
+(     This pattern tries each argument pattern from left to right,) s
+44.6 583 M
+(     until one of these alternatives matches.  If none matches then) s
+44.6 571 M
+(     this pattern does not match.) s
+44.6 547 M
+( \(r:repeat <min> <max> <pattern>\)) s
+44.6 535 M
+(     This pattern tries to match the given argument pattern a minimum) s
+44.6 523 M
+(     of min times but no more than a maximum of max times.  If max is) s
+44.6 511 M
+(     given as #f then there is no maximum specified.  Note that if) s
+44.6 499 M
+(     max=min the given pattern must be matched exactly that many) s
+44.6 487 M
+(     times.) s
+44.6 463 M
+(Because these are all Scheme procedures \(in the file regexp.scm\) you) s
+44.6 451 M
+(can freely mix these with any Scheme code.) s
+44.6 427 M
+(Here are some examples:) s
+44.6 403 M
+(  Pattern:  \(r:seq \(r:quote "a"\) \(r:dot\) \(r:quote "c"\)\)) s
+44.6 391 M
+(  Matches:  "abc" and "aac" and "acc" ) s
+44.6 367 M
+(  Pattern:  \(r:alt \(r:quote "foo"\) \(r:quote "bar"\) \(r:quote "baz"\)\)) s
+44.6 355 M
+(  Matches:  "foo" and "bar" and "baz" ) s
+44.6 331 M
+(  Pattern:  \(r:repeat 3 5 \(r:alt \(r:quote "cat"\) \(r:quote "dog"\)\)\)) s
+44.6 319 M
+(  Matches:  "catdogcat" and "catcatdogdog" and "dogdogcatdogdog") s
+44.6 307 M
+(            but not "catcatcatdogdogdog") s
+44.6 283 M
+(  Pattern:  \(let \(\(digit ) s
+44.6 271 M
+(                   \(r:char-from "0123456789"\)\)\)) s
+44.6 259 M
+(              \(r:seq \(r:bol\)) s
+44.6 247 M
+(                     \(r:quote "["\)) s
+44.6 235 M
+(                     digit) s
+44.6 223 M
+(                     digit) s
+44.6 211 M
+(                     \(r:quote "]"\)) s
+44.6 199 M
+(                     \(r:quote "."\)) s
+44.6 187 M
+(                     \(r:quote " "\)) s
+44.6 175 M
+(                     \(r:char-from "ab"\)) s
+44.6 163 M
+(                     \(r:repeat 3 5 \(r:alt \(r:quote "cat"\) \(r:quote "dog"\)\)\)) s
+44.6 151 M
+(                     \(r:char-not-from "def"\)) s
+44.6 139 M
+(                     \(r:eol\)\)\)) s
+44.6 127 M
+(  Matches:  "[09]. acatdogdogcats" but not) s
+44.6 115 M
+(            "[10]. ifacatdogdogs" nor) s
+44.6 103 M
+(            "[11]. acatdogdogsme") s
+_R
+S
+%%Page: (4) 4
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 4 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Mon Feb 10 10:31:22 2014) def
+/pagenumstr (4) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+44.6 679 M
+(In the file regexp.scm we define an interface to the grep utility,) s
+44.6 667 M
+(which allows a Scheme program to call grep with a regular expression) s
+44.6 655 M
+(\(constructed from the given pattern\) on a given file name.  The grep) s
+44.6 643 M
+(utility extracts lines that contain a substring that can match the) s
+44.6 631 M
+(given pattern.) s
+44.6 607 M
+(So, for example: given the test file test.txt \(supplied\) we can find ) s
+44.6 595 M
+(the lines in the file that contain a match to the given pattern.) s
+44.6 571 M
+(\(pp) s
+44.6 559 M
+( \(r:grep \(r:seq " ") s
+44.6 547 M
+(                \(r:repeat 3 5 \(r:alt \(r:quote "cat"\) \(r:quote "dog"\)\)\)) s
+44.6 535 M
+(                \(r:eol\)\) ) s
+44.6 523 M
+(         "tests.txt"\)\)) s
+44.6 511 M
+(\("[09]. catdogcat" "[10]. catcatdogdog" "[11]. dogdogcatdogdog"\)) s
+44.6 499 M
+(;Unspecified return value) s
+44.6 475 M
+(Note that the pretty-printer \(pp\) returns an unspecified value, after) s
+44.6 463 M
+(printing the list of lines that grep found matching the pattern) s
+44.6 451 M
+(specified.) s
+44.6 415 M
+(                            Implementation) s
+44.6 391 M
+(Let's look at how this language is implemented.  Regular expressions) s
+44.6 379 M
+(will be represented as strings using the "basic" regular expression) s
+44.6 367 M
+(syntax of the Unix grep program.) s
+44.6 343 M
+(\(define \(r:dot\) "."\)) s
+44.6 331 M
+(\(define \(r:bol\) "^"\)) s
+44.6 319 M
+(\(define \(r:eol\) "$"\)) s
+44.6 295 M
+(These directly correspond to regular-expression syntax.  Next, r:seq) s
+44.6 283 M
+(implements a way to treat a given set of regular-expression fragments) s
+44.6 271 M
+(as a self-contained element:) s
+44.6 247 M
+(\(define \(r:seq . exprs\)) s
+44.6 235 M
+(  \(string-append "\\\\\(" \(apply string-append exprs\) "\\\\\)"\)\)) s
+44.6 211 M
+(The use of parentheses in the result isolates the content of the given) s
+44.6 199 M
+(expression fragments from the surrounding context.  The implementation) s
+44.6 187 M
+(of r:quote is a bit harder:) s
+44.6 163 M
+(\(define \(r:quote string\)) s
+44.6 151 M
+(  \(r:seq) s
+44.6 139 M
+(   \(list->string) s
+44.6 127 M
+(    \(append-map \(lambda \(char\)) s
+44.6 115 M
+(                  \(if \(memv char chars-needing-quoting\)) s
+44.6 103 M
+(                      \(list #\\\\ char\)) s
+44.6 91 M
+(                      \(list char\)\)\)) s
+44.6 79 M
+(                \(string->list string\)\)\)\)\)) s
+44.6 55 M
+(\(define chars-needing-quoting) s
+44.6 43 M
+(  '\(#\\. #\\[ #\\\\ #\\^ #\\$ #\\*\)\)) s
+44.6 19 M
+(In a regular expression, most characters are self-quoting.  However,) s
+44.6 7 M
+(some characters are regular-expression operators and must be) s
+_R
+S
+%%Page: (5) 5
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 5 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Mon Feb 10 10:31:22 2014) def
+/pagenumstr (5) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+44.6 691 M
+(explicitly quoted.  We wrap the result using r:seq to guarantee that) s
+44.6 679 M
+(the quoted string is self contained.) s
+44.6 655 M
+(To implement alternative subexpressions, we interpolate a vertical bar) s
+44.6 643 M
+(between subexpressions and wrap the result using r:seq:) s
+44.6 619 M
+(\(define \(r:alt . exprs\)) s
+44.6 607 M
+(  \(if \(pair? exprs\)) s
+44.6 595 M
+(      \(apply r:seq) s
+44.6 583 M
+(             \(cons \(car exprs\)) s
+44.6 571 M
+(                   \(append-map \(lambda \(expr\)) s
+44.6 559 M
+(                                 \(list "\\\\|" expr\)\)) s
+44.6 547 M
+(                               \(cdr exprs\)\)\)\)) s
+44.6 535 M
+(      \(r:seq\)\)\)) s
+44.6 511 M
+(Note that alternative expressions, unlike the rest of the regular) s
+44.6 499 M
+(expressions supported here, are not a part of POSIX Basic Regular) s
+44.6 487 M
+(Expression \(BRE\) syntax.  They are an extension defined by GNU grep,) s
+44.6 475 M
+(which is supported by many implementations.) s
+44.6 451 M
+(The implementation of repetition is straightforward by using copies of) s
+44.6 439 M
+(the given regular expression:) s
+44.6 415 M
+(\(define \(r:repeat min max expr\)) s
+44.6 403 M
+(  \(apply r:seq) s
+44.6 391 M
+(         \(append \(make-list min expr\)) s
+44.6 379 M
+(                 \(if \(eqv? max min\)) s
+44.6 367 M
+(                     '\(\)) s
+44.6 355 M
+(                     \(if max) s
+44.6 343 M
+(                         \(make-list \(- max min\)) s
+44.6 331 M
+(                                    \(r:alt expr ""\)\)) s
+44.6 319 M
+(                         \(list expr "*"\)\)\)\)\)\)) s
+44.6 295 M
+(This makes min copies, followed by \(- max min\) optional copies.  \(Each) s
+44.6 283 M
+(optional copy is an alternative of the expression and an empty) s
+44.6 271 M
+(expression.\)  If there's no maximum, then the expression followed by) s
+44.6 259 M
+(an asterisk matches any number of times.) s
+44.6 235 M
+(The implementation of r:char-from and r:char-not-from is complicated) s
+44.6 223 M
+(by the need for baroque quotation.  This is best organized in two) s
+44.6 211 M
+(parts, the first to handle the differences between them, and the) s
+44.6 199 M
+(second for the common quotation:) s
+44.6 175 M
+(\(define \(r:char-from string\)) s
+44.6 163 M
+(  \(case \(string-length string\)) s
+44.6 151 M
+(    \(\(0\) \(r:seq\)\)) s
+44.6 139 M
+(    \(\(1\) \(r:quote string\)\)) s
+44.6 127 M
+(    \(else) s
+44.6 115 M
+(     \(bracket string) s
+44.6 103 M
+(              \(lambda \(members\)) s
+44.6 91 M
+(                \(if \(lset= eqv? '\(#\\- #\\^\) members\)) s
+44.6 79 M
+(                    '\(#\\- #\\^\)) s
+44.6 67 M
+(                    \(quote-bracketed-contents members\)\)\)\)\)\)\)) s
+44.6 43 M
+(\(define \(r:char-not-from string\)) s
+44.6 31 M
+(  \(bracket string) s
+44.6 19 M
+(           \(lambda \(members\)) s
+44.6 7 M
+(             \(cons #\\^ \(quote-bracketed-contents members\)\)\)\)\)) s
+_R
+S
+%%Page: (6) 6
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 6 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Mon Feb 10 10:31:22 2014) def
+/pagenumstr (6) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+44.6 679 M
+(\(define \(bracket string procedure\)) s
+44.6 667 M
+(  \(list->string) s
+44.6 655 M
+(   \(append '\(#\\[\)) s
+44.6 643 M
+(           \(procedure \(string->list string\)\)) s
+44.6 631 M
+(           '\(#\\]\)\)\)\)) s
+44.6 607 M
+(The special cases for r:char-from handle empty and singleton) s
+44.6 595 M
+(sets of characters specially, which simplifies the general case.) s
+44.6 583 M
+(There is also a particular special case for a set containing only) s
+44.6 571 M
+(caret and hyphen.  But r:char-not-from has no such) s
+44.6 559 M
+(restrictions.  The general case handles the three characters that have) s
+44.6 547 M
+(special meaning inside a bracket by placing them in positions where) s
+44.6 535 M
+(they are not operators.  \(We told you this was ugly!\)) s
+44.6 511 M
+(\(define \(quote-bracketed-contents members\)) s
+44.6 499 M
+(  \(let \(\(optional) s
+44.6 487 M
+(         \(lambda \(char\)) s
+44.6 475 M
+(           \(if \(memv char members\) \(list char\) '\(\)\)\)\)\)) s
+44.6 463 M
+(    \(append \(optional #\\]\)) s
+44.6 451 M
+(            \(remove \(lambda \(c\)) s
+44.6 439 M
+(                      \(memv c chars-needing-quoting-in-brackets\)\)) s
+44.6 427 M
+(                    members\)) s
+44.6 415 M
+(            \(optional #\\^\)) s
+44.6 403 M
+(            \(optional #\\-\)\)\)\)) s
+44.6 379 M
+(\(define chars-needing-quoting-in-brackets) s
+44.6 367 M
+(  '\(#\\] #\\^ #\\-\)\)) s
+44.6 343 M
+(In order to test this code, we can print the corresponding grep) s
+44.6 331 M
+(command and use cut and paste to run it in a shell:) s
+44.6 307 M
+(\(define \(write-bourne-shell-grep-command expr filename\)) s
+44.6 295 M
+(  \(display \(bourne-shell-grep-command-string expr filename\)\)\)) s
+44.6 271 M
+(\(define \(bourne-shell-grep-command-string expr filename\)) s
+44.6 259 M
+(  \(string-append "grep -e ") s
+44.6 247 M
+(                 \(bourne-shell-quote-string expr\)) s
+44.6 235 M
+(                 " ") s
+44.6 223 M
+(                 filename\)\)) s
+44.6 199 M
+(Because shells have their own quoting issues, we need to not only) s
+44.6 187 M
+(quote the regular expression, but also choose which shell to use,) s
+44.6 175 M
+(since different shells use different quoting conventions.  The Bourne) s
+44.6 163 M
+(shell is ubiquitous, and has a relatively simple quoting convention:) s
+44.6 139 M
+(\(define \(bourne-shell-quote-string string\)) s
+44.6 127 M
+(  \(list->string) s
+44.6 115 M
+(   \(append \(list #\\'\)) s
+44.6 103 M
+(           \(append-map \(lambda \(char\)) s
+44.6 91 M
+(                         \(if \(char=? char #\\'\)) s
+44.6 79 M
+(                             \(list #\\' #\\\\ char #\\'\)) s
+44.6 67 M
+(                             \(list char\)\)\)) s
+44.6 55 M
+(                       \(string->list string\)\)) s
+44.6 43 M
+(           \(list #\\'\)\)\)\)) s
+44.6 19 M
+(This quoting convention uses single-quote characters surrounding a) s
+44.6 7 M
+(string, which quotes anything in the string other than a single-quote,) s
+_R
+S
+%%Page: (7) 7
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 7 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Mon Feb 10 10:31:22 2014) def
+/pagenumstr (7) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+44.6 691 M
+(which ends the quoted string.  So, to quote a single-quote character,) s
+44.6 679 M
+(we must end the string, quote the single quote explicitly using) s
+44.6 667 M
+(backslash, and then start another quoted string.  The shell interprets) s
+44.6 655 M
+(this concatenation as a single token.  \(Are we having fun yet?\)) s
+44.6 631 M
+(We can directly use the system grep from MIT/GNU Scheme.  \(This code) s
+44.6 619 M
+(is MIT/GNU Scheme specific.\)) s
+44.6 595 M
+(\(load-option 'synchronous-subprocess\)) s
+44.6 571 M
+(\(define \(r:grep expr filename\)) s
+44.6 559 M
+(  \(let \(\(port \(open-output-string\)\)\)) s
+44.6 547 M
+(    \(and \(= \(run-shell-command) s
+44.6 535 M
+(             \(bourne-shell-grep-command-string expr filename\)) s
+44.6 523 M
+(             'output port\)) s
+44.6 511 M
+(            0\)) s
+44.6 499 M
+(         \(r:split-lines \(get-output-string port\)\)\)\)\)) s
+44.6 475 M
+(\(define \(r:split-lines string\)) s
+44.6 463 M
+(  \(reverse) s
+44.6 451 M
+(   \(let \(\(end \(string-length string\)\)\)) s
+44.6 439 M
+(     \(let loop \(\(i 0\) \(lines '\(\)\)\)) s
+44.6 427 M
+(       \(if \(< i end\)) s
+44.6 415 M
+(           \(let \(\(j) s
+44.6 403 M
+(                  \(substring-find-next-char string i end #\\newline\)\)\)) s
+44.6 391 M
+(             \(if j) s
+44.6 379 M
+(                 \(loop \(+ j 1\)) s
+44.6 367 M
+(                       \(cons \(substring string i j\) lines\)\)) s
+44.6 355 M
+(                 \(cons \(substring string i end\) lines\)\)\)) s
+44.6 343 M
+(           lines\)\)\)\)\)) s
+_R
+S
+%%Page: (8) 8
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 8 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Mon Feb 10 10:31:22 2014) def
+/pagenumstr (8) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+44.6 679 M
+(However, we can avoid most of this quotation hair by using the) s
+44.6 667 M
+(run-synchronous-subprocess feature of MIT/GNU Scheme to call the grep) s
+44.6 655 M
+(program without the intermediate complication of a shell.  To do this ) s
+44.6 643 M
+(we can use:) s
+44.6 619 M
+(\(define \(r:grep* expr filename\)) s
+44.6 607 M
+(  \(let \(\(port \(open-output-string\)\)\)) s
+44.6 595 M
+(    \(run-synchronous-subprocess "grep") s
+44.6 583 M
+(                                \(list expr filename\)) s
+44.6 571 M
+(                                'output) s
+44.6 559 M
+(                                port\)) s
+44.6 547 M
+(    \(r:split-lines \(get-output-string port\)\)\)\)) s
+_R
+S
+%%Page: (9) 9
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 9 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Mon Feb 10 10:31:22 2014) def
+/pagenumstr (9) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+44.6 679 M
+(                       The moral of this story) s
+44.6 655 M
+(Our translator is very complicated because most regular expressions) s
+44.6 643 M
+(are not composable to make larger regular expressions unless extreme) s
+44.6 631 M
+(measures are taken to isolate the parts.  Our translator does this) s
+44.6 619 M
+(work, but consequently the regular expressions that it generates have) s
+44.6 607 M
+(much unnecessary boilerplate.  Humans don't write regular expressions) s
+44.6 595 M
+(this way because they use boilerplate only where necessary---but often) s
+44.6 583 M
+(miss instances where it is necessary, causing hard-to-find bugs.) s
+44.6 559 M
+(The moral of this story is that regular expressions are a beautiful) s
+44.6 547 M
+(example of how not to build a system.  Using composable parts and) s
+44.6 535 M
+(combinators to make new parts by combining others leads to simpler and) s
+44.6 523 M
+(more robust implementations.) s
+44.6 499 M
+(-------------) s
+44.6 487 M
+(Problem 1.1: Warmup) s
+44.6 463 M
+(In the traditional regular expression language the asterisk \(*\)) s
+44.6 451 M
+(operator following a subpattern means zero or more copies of the) s
+44.6 439 M
+(subpattern and the plus-sign \(+\) operator following a subpattern means) s
+44.6 427 M
+(one or more copies of the subpattern.  Define Scheme procedures r:*) s
+44.6 415 M
+(and r:+ to take a pattern and iterate it as necessary.  This can be) s
+44.6 403 M
+(done in terms of r:repeat.) s
+44.6 379 M
+(Demonstrate your procedures on real data in complex patterns.) s
+44.6 367 M
+(-------------) s
+44.6 331 M
+(       A Subtle Bug, One Bad Joke, Two Tweaks, and a Revelation) s
+44.6 307 M
+(Ben Bitdiddle has noticed a problem with our implementation of) s
+44.6 295 M
+(\(r:repeat <min> <max> <pattern>\).) s
+44.6 271 M
+(The use of \(r:alt expr ""\) at the end of the r:repeat procedure is) s
+44.6 259 M
+(a bit dodgy.  This code fragment compiles to an Extended Regular) s
+44.6 247 M
+(Expression \(ERE\) Alternation regular expression of the form \(expr|\).) s
+44.6 235 M
+(\(See 9.4.7 of the POSIX regular expression document.\)) s
+44.6 211 M
+(This relies on the fact that alternation with something and nothing is) s
+44.6 199 M
+(the equivalent of saying "one or none".  That is: \(expr|\) denotes one) s
+44.6 187 M
+(or no instances of expr.  Unfortunately, this depends on an) s
+44.6 175 M
+(undocumented GNU extension to the formal POSIX standard for REs.) s
+44.6 151 M
+(Specifically, section 9.4.3 states that a vertical line appearing) s
+44.6 139 M
+(immediately before a close parenthesis \(or immediately after an open) s
+44.6 127 M
+(parenthesis\) produces undefined behavior.  In essence, an RE must not) s
+44.6 115 M
+(be a null sequence.) s
+44.6 91 M
+(GNU grep just happens to Do The Right Thing \(tm\) when presented with) s
+44.6 79 M
+(\(x|\).  Not all grep implementations are as tolerant.) s
+_R
+S
+%%Page: (10) 10
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 10 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Mon Feb 10 10:31:22 2014) def
+/pagenumstr (10) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+44.6 679 M
+(Therefore, Ben asks his team of three code hackers \(Louis, Alyssa and) s
+44.6 667 M
+(his niece Bonnie\) to propose alternative workarounds.  Ultimately, he) s
+44.6 655 M
+(proposes his own patch, which you will implement.) s
+44.6 631 M
+( * Louis Reasoner suggests that a simple, elegant fix would be to) s
+44.6 619 M
+(   replace the code fragment \(r:alt expr ""\) with a straight-) s
+44.6 607 M
+(   forward call to \(r:repeat 0 1 expr\).) s
+44.6 583 M
+( * Alyssa P. Hacker proposes that an alternative fix would be to) s
+44.6 571 M
+(   rewrite the else clause of r:repeat to compile \(r:repeat 3 5 <x>\)) s
+44.6 559 M
+(   into the equivalent of \(xxx|xxxx|xxxxx\) instead of the naughty) s
+44.6 547 M
+(   xxx\(x|\)\(x|\) non-POSIX-compliant undefined regular expression.  She) s
+44.6 535 M
+(   refers to section 9.4.7 of the POSIX regular expression document.) s
+44.6 511 M
+( * Bonnie Bitdiddle points to the question mark \(?\) operator in) s
+44.6 499 M
+(   section 9.4.6.4 and proposes that a better fix would be to) s
+44.6 487 M
+(   implement an r:? operator then replace \(r:alt expr ""\) with ) s
+44.6 475 M
+(   \(r:? expr\).) s
+44.6 451 M
+( * Meanwhile, Ben looks closely at the RE spec and has a revelation.) s
+44.6 439 M
+(   He proposes that r:repeat be re-implemented to emit Interval) s
+44.6 427 M
+(   expressions.  See section 9.3.6.5 of the POSIX documentation.) s
+44.6 415 M
+(   Please try not to get sick.) s
+44.6 391 M
+(-------------) s
+44.6 379 M
+(Problem 1.2: The Proposals) s
+44.6 355 M
+(Let's very briefly consider each proposal:) s
+44.6 331 M
+(a. Everyone in the room immediately giggles at Louis's silly joke.) s
+44.6 319 M
+(   What's so funny about it?  That is, what's wrong with this idea?) s
+44.6 295 M
+(   A one-sentence punchline will do.) s
+44.6 271 M
+(b. What advantages does Bonnie's proposal have over Alyssa's) s
+44.6 259 M
+(   in terms of both code and data?) s
+44.6 235 M
+(   A brief, concise yet convincing few sentences suffice.) s
+44.6 211 M
+(c. What advantage does Ben's proposal have over all the others?) s
+44.6 199 M
+(   Specifically, ponder which section of the POSIX document he cites) s
+44.6 187 M
+(   versus which sections the others cite, then take a quick peek at) s
+44.6 175 M
+(   Problem 1.5 below and consider the implications.  Also, consider) s
+44.6 163 M
+(   the size of the output strings in this new code as well as the) s
+44.6 151 M
+(   overall clarity of the code.) s
+44.6 127 M
+(   Again, a brief sentence or two is sufficient.) s
+44.6 103 M
+(d. Following Ben's proposal, re-implement r:repeat to emit Interval) s
+44.6 91 M
+(   Expressions.  Hint: Scheme's number->string procedure should be) s
+44.6 79 M
+(   handy.  Caveat: Beware the backslashes.) s
+44.6 55 M
+(   Show the output it generates on a few well-chosen sample inputs.) s
+44.6 43 M
+(   Demonstrate your procedure on real data in complex patterns.) s
+44.6 31 M
+(-------------) s
+_R
+S
+%%Page: (11) 11
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 11 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Mon Feb 10 10:31:22 2014) def
+/pagenumstr (11) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+44.6 691 M
+(                           Too Much Nesting) s
+44.6 667 M
+(Our program produces excessively nested regular expressions: it makes) s
+44.6 655 M
+(groups even when they are not necessary.  For example, the following) s
+44.6 643 M
+(simple pattern leads to an overly complex regular expression:  ) s
+44.6 619 M
+(   \(display \(r:seq \(r:quote "a"\) \(r:dot\) \(r:quote "c"\)\)\)) s
+44.6 607 M
+(   \\\(\\\(a\\\).\\\(c\\\)\\\)) s
+44.6 583 M
+(Another problem is that BREs may involve back-references.  \(See) s
+44.6 571 M
+(9.3.6.3 of the POSIX regular expression documentation.\)  A) s
+44.6 559 M
+(back-reference refers to a previously parenthesized subexpression.  So) s
+44.6 547 M
+(it is important that the parenthesized subexpressions be ones) s
+44.6 535 M
+(explicitly placed by the author of the pattern.  \(Aargh! This is one) s
+44.6 523 M
+(of the worst ideas I \(GJS\) have ever heard of -- grouping, which is) s
+44.6 511 M
+(necessary for iteration, was confused with naming for later reference.) s
+44.6 499 M
+(What a crock!\)) s
+44.6 475 M
+(-------------) s
+44.6 463 M
+(Problem 1.3: Optimization) s
+44.6 439 M
+(Edit our program to eliminate as much of the unnecessary nesting as) s
+44.6 427 M
+(you can.  Caution: there are subtle cases here that you have to watch) s
+44.6 415 M
+(out for.  What is such a case?  Demonstrate your better version of our) s
+44.6 403 M
+(program and show how it handles the subtleties.) s
+44.6 379 M
+(Hint: Our program uses strings as its intermediate representation as) s
+44.6 367 M
+(well as its result.  You might consider using a different intermediate) s
+44.6 355 M
+(representation.) s
+44.6 343 M
+(-------------) s
+44.6 319 M
+(-------------) s
+44.6 307 M
+(Problem 1.4: Back-references) s
+44.6 283 M
+(Add in a procedure for constructing back-references.) s
+44.6 271 M
+(Have fun getting confused about BREs.) s
+44.6 259 M
+(-------------) s
+_R
+S
+%%Page: (12) 12
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 12 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Mon Feb 10 10:31:22 2014) def
+/pagenumstr (12) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+44.6 679 M
+(                              Standards?) s
+44.6 655 M
+(                The best thing about standards is that ) s
+44.6 643 M
+(                there are so many to choose from.) s
+44.6 619 M
+(There are also Extended Regular Expressions \(EREs\) defined in the) s
+44.6 607 M
+(POSIX regular expression documentation.  Some software, such as egrep,) s
+44.6 595 M
+(uses this version of regular expressions.  Unfortunately EREs are not) s
+44.6 583 M
+(a conservative extension of BREs: ERE syntax is actually inconsistent) s
+44.6 571 M
+(with BRE syntax!  It is an interesting project to extend our Scheme) s
+44.6 559 M
+(pattern language so that the target can be either BREs or EREs.) s
+44.6 535 M
+(-------------) s
+44.6 523 M
+(Problem 1.5: Ugh!) s
+44.6 499 M
+(  a. What are the significant differences between BREs and EREs that) s
+44.6 487 M
+(  make this a pain?  List the differences that must be addressed.) s
+44.6 463 M
+(  b. How can the back end be factored so that our language can compile) s
+44.6 451 M
+(  into either kind of regular expression, depending on what is needed?) s
+44.6 439 M
+(  How can we maintain the abstract layer that is independent of the ) s
+44.6 427 M
+(  target regular expression language?  Explain your strategy.) s
+44.6 403 M
+(  c. Extend our implementation to have both back ends.) s
+44.6 379 M
+(Demonstrate your work by making sure that you can run egrep as well as) s
+44.6 367 M
+(grep, with equivalent results in cases that test the differences you) s
+44.6 355 M
+(found in part a.) s
+44.6 343 M
+(-------------) s
+44.6 319 M
+(           End of Problem Set.  Reference Material Follows.) s
+44.6 307 M
+(-----------------------------------------------------------------------) s
+_R
+S
+%%Page: (13) 13
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 13 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Mon Feb 10 10:31:22 2014) def
+/pagenumstr (13) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+44.6 679 M
+(The following is an excerpt from the Debian GNU/Linux man page on grep.) s
+44.6 655 M
+(REGULAR EXPRESSIONS) s
+44.6 643 M
+(    A  regular  expression  is a pattern that describes a set of strings.) s
+44.6 631 M
+(    Regular expressions are constructed analogously to arithmetic expres-) s
+44.6 619 M
+(    sions, by using various operators to combine smaller expressions.) s
+44.6 595 M
+(    Grep  understands three different versions of regular expression syn-) s
+44.6 583 M
+(    tax: "basic," "extended," and "perl."  In GNU grep, there is no  dif-) s
+44.6 571 M
+(    ference in available functionality using either of the first two syn-) s
+44.6 559 M
+(    taxes.  In other implementations, basic regular expressions are  less) s
+44.6 547 M
+(    powerful.   The  following  description  applies  to extended regular) s
+44.6 535 M
+(    expressions; differences for basic regular expressions are summarized) s
+44.6 523 M
+(    afterwards.   Perl  regular expressions add additional functionality,) s
+44.6 511 M
+(    but the implementation used here is undocumented and is not  compati-) s
+44.6 499 M
+(    ble with other grep implementations.) s
+44.6 475 M
+(    The  fundamental  building  blocks  are  the regular expressions that) s
+44.6 463 M
+(    match a single character.  Most characters, including all letters and) s
+44.6 451 M
+(    digits, are regular expressions that match themselves.  Any metachar-) s
+44.6 439 M
+(    acter with special meaning may be quoted by preceding it with a back-) s
+44.6 427 M
+(    slash.) s
+44.6 403 M
+(    A bracket expression is a list of characters enclosed by [ and ].  It) s
+44.6 391 M
+(    matches any single character in that list; if the first character  of) s
+44.6 379 M
+(    the  list  is  the  caret  ^ then it matches any character not in the) s
+44.6 367 M
+(    list.  For example, the regular expression [0123456789]  matches  any) s
+44.6 355 M
+(    single digit.) s
+44.6 331 M
+(    Within a bracket expression, a range expression consists of two char-) s
+44.6 319 M
+(    acters separated by a hyphen.  It matches any single  character  that) s
+44.6 307 M
+(    sorts  between the two characters, inclusive, using the locale's col-) s
+44.6 295 M
+(    lating sequence and character set.  For example,  in  the  default  C) s
+44.6 283 M
+(    locale,  [a-d] is equivalent to [abcd].  Many locales sort characters) s
+44.6 271 M
+(    in dictionary order, and in these  locales  [a-d]  is  typically  not) s
+44.6 259 M
+(    equivalent  to [abcd]; it might be equivalent to [aBbCcDd], for exam-) s
+44.6 247 M
+(    ple.  To obtain the traditional  interpretation  of  bracket  expres-) s
+44.6 235 M
+(    sions,  you  can  use  the C locale by setting the LC_ALL environment) s
+44.6 223 M
+(    variable to the value C.) s
+44.6 199 M
+(    Finally, certain named classes of characters  are  predefined  within) s
+44.6 187 M
+(    bracket  expressions,  as follows.  Their names are self explanatory,) s
+44.6 175 M
+(    and they are [:alnum:], [:alpha:], [:cntrl:],  [:digit:],  [:graph:],) s
+44.6 163 M
+(    [:lower:],    [:print:],   [:punct:],   [:space:],   [:upper:],   and) s
+44.6 151 M
+(    [:xdigit:].  For example, [[:alnum:]] means [0-9A-Za-z],  except  the) s
+44.6 139 M
+(    latter  form depends upon the C locale and the ASCII character encod-) s
+44.6 127 M
+(    ing, whereas the former is independent of locale and  character  set.) s
+44.6 115 M
+(    \(Note that the brackets in these class names are part of the symbolic) s
+44.6 103 M
+(    names, and must be included in addition to  the  brackets  delimiting) s
+44.6 91 M
+(    the  bracket  list.\)   Most metacharacters lose their special meaning) s
+44.6 79 M
+(    inside lists.  To include a literal ] place it  first  in  the  list.) s
+44.6 67 M
+(    Similarly,  to  include  a  literal  ^  place  it anywhere but first.) s
+44.6 55 M
+(    Finally, to include a literal - place it last.) s
+_R
+S
+%%Page: (14) 14
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 14 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Mon Feb 10 10:31:22 2014) def
+/pagenumstr (14) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+44.6 679 M
+(     The period .  matches any single character.  The symbol \\w is a  syn-) s
+44.6 667 M
+(     onym for [[:alnum:]] and \\W is a synonym for [^[:alnum]].) s
+44.6 643 M
+(     The  caret  ^  and  the dollar sign $ are metacharacters that respec-) s
+44.6 631 M
+(     tively match the empty string at the beginning and  end  of  a  line.) s
+44.6 619 M
+(     The  symbols  \\<  and  \\>  respectively match the empty string at the) s
+44.6 607 M
+(     beginning and end of a word.  The symbol \\b matches the empty  string) s
+44.6 595 M
+(     at  the edge of a word, and \\B matches the empty string provided it's) s
+44.6 583 M
+(     not at the edge of a word.) s
+44.6 559 M
+(     A regular expression may be followed by  one  of  several  repetition) s
+44.6 547 M
+(     operators:) s
+44.6 535 M
+(     ?      The preceding item is optional and matched at most once.) s
+44.6 523 M
+(     *      The preceding item will be matched zero or more times.) s
+44.6 511 M
+(     +      The preceding item will be matched one or more times.) s
+44.6 499 M
+(     {n}    The preceding item is matched exactly n times.) s
+44.6 487 M
+(     {n,}   The preceding item is matched n or more times.) s
+44.6 475 M
+(     {n,m}  The  preceding  item is matched at least n times, but not more) s
+44.6 463 M
+(            than m times.) s
+44.6 439 M
+(     Two regular expressions may be concatenated;  the  resulting  regular) s
+44.6 427 M
+(     expression  matches any string formed by concatenating two substrings) s
+44.6 415 M
+(     that respectively match the concatenated subexpressions.) s
+44.6 391 M
+(     Two regular expressions may be joined by the infix  operator  |;  the) s
+44.6 379 M
+(     resulting  regular  expression  matches  any  string  matching either) s
+44.6 367 M
+(     subexpression.) s
+44.6 343 M
+(     Repetition takes precedence over concatenation, which in  turn  takes) s
+44.6 331 M
+(     precedence  over  alternation.  A whole subexpression may be enclosed) s
+44.6 319 M
+(     in parentheses to override these precedence rules.) s
+44.6 295 M
+(     The backreference \\n, where n is a single  digit,  matches  the  sub-) s
+44.6 283 M
+(     string  previously  matched by the nth parenthesized subexpression of) s
+44.6 271 M
+(     the regular expression.) s
+44.6 247 M
+(     In basic regular expressions the metacharacters ?, +, {, |, \(, and  \)) s
+44.6 235 M
+(     lose  their special meaning; instead use the backslashed versions \\?,) s
+44.6 223 M
+(     \\+, \\{, \\|, \\\(, and \\\).) s
+44.6 199 M
+(     Traditional egrep did not support the { metacharacter, and some egrep) s
+44.6 187 M
+(     implementations  support \\{ instead, so portable scripts should avoid) s
+44.6 175 M
+(     { in egrep patterns and should use [{] to match a literal {.) s
+44.6 151 M
+(     GNU egrep attempts to support traditional usage by assuming that { is) s
+44.6 139 M
+(     not  special if it would be the start of an invalid interval specifi-) s
+44.6 127 M
+(     cation.  For example, the shell command egrep '{1' searches  for  the) s
+44.6 115 M
+(     two-character  string  {1  instead of reporting a syntax error in the) s
+44.6 103 M
+(     regular expression.  POSIX.2 allows this behavior  as  an  extension,) s
+44.6 91 M
+(     but portable scripts should avoid it.) s
+44.6 67 M
+(GNU Project                      2002/01/22                          GREP\(1\)) s
+_R
+S
+%%Page: (15) 15
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 15 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Mon Feb 10 10:31:22 2014) def
+/pagenumstr (15) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+44.6 679 M
+(;;;; Scheme Regular Expression Language Implementation -- regexp.scm) s
+44.6 655 M
+(\(define \(r:dot\) "."\)) s
+44.6 643 M
+(\(define \(r:bol\) "^"\)) s
+44.6 631 M
+(\(define \(r:eol\) "$"\)) s
+44.6 607 M
+(\(define \(r:quote string\)) s
+44.6 595 M
+(  \(r:seq) s
+44.6 583 M
+(   \(list->string) s
+44.6 571 M
+(    \(append-map \(lambda \(char\)) s
+44.6 559 M
+(                  \(if \(memv char chars-needing-quoting\)) s
+44.6 547 M
+(                      \(list #\\\\ char\)) s
+44.6 535 M
+(                      \(list char\)\)\)) s
+44.6 523 M
+(                \(string->list string\)\)\)\)\)) s
+44.6 499 M
+(\(define chars-needing-quoting) s
+44.6 487 M
+(  '\(#\\. #\\[ #\\\\ #\\^ #\\$ #\\*\)\)) s
+44.6 463 M
+(\(define \(r:char-from string\)) s
+44.6 451 M
+(  \(case \(string-length string\)) s
+44.6 439 M
+(    \(\(0\) \(r:seq\)\)) s
+44.6 427 M
+(    \(\(1\) \(r:quote string\)\)) s
+44.6 415 M
+(    \(else) s
+44.6 403 M
+(     \(bracket string) s
+44.6 391 M
+(              \(lambda \(members\)) s
+44.6 379 M
+(                \(if \(lset= eqv? '\(#\\- #\\^\) members\)) s
+44.6 367 M
+(                    '\(#\\- #\\^\)) s
+44.6 355 M
+(                    \(quote-bracketed-contents members\)\)\)\)\)\)\)) s
+44.6 331 M
+(\(define \(r:char-not-from string\)) s
+44.6 319 M
+(  \(bracket string) s
+44.6 307 M
+(           \(lambda \(members\)) s
+44.6 295 M
+(             \(cons #\\^ \(quote-bracketed-contents members\)\)\)\)\)) s
+44.6 271 M
+(\(define \(bracket string procedure\)) s
+44.6 259 M
+(  \(list->string) s
+44.6 247 M
+(   \(append '\(#\\[\)) s
+44.6 235 M
+(           \(procedure \(string->list string\)\)) s
+44.6 223 M
+(           '\(#\\]\)\)\)\)) s
+44.6 199 M
+(\(define \(quote-bracketed-contents members\)) s
+44.6 187 M
+(  \(let \(\(optional) s
+44.6 175 M
+(         \(lambda \(char\) \(if \(memv char members\) \(list char\) '\(\)\)\)\)\)) s
+44.6 163 M
+(    \(append \(optional #\\]\)) s
+44.6 151 M
+(            \(remove \(lambda \(c\)) s
+44.6 139 M
+(                      \(memv c chars-needing-quoting-in-brackets\)\)) s
+44.6 127 M
+(                    members\)) s
+44.6 115 M
+(            \(optional #\\^\)) s
+44.6 103 M
+(            \(optional #\\-\)\)\)\)) s
+44.6 79 M
+(\(define chars-needing-quoting-in-brackets) s
+44.6 67 M
+(  '\(#\\] #\\^ #\\-\)\)) s
+_R
+S
+%%Page: (16) 16
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 16 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Mon Feb 10 10:31:22 2014) def
+/pagenumstr (16) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+44.6 679 M
+(;;; Means of combination for patterns) s
+44.6 655 M
+(\(define \(r:seq . exprs\)) s
+44.6 643 M
+(  \(string-append "\\\\\(" \(apply string-append exprs\) "\\\\\)"\)\)) s
+44.6 619 M
+(;;; An extension to POSIX basic regular expressions.) s
+44.6 607 M
+(;;; Supported by GNU grep and possibly others.) s
+44.6 595 M
+(\(define \(r:alt . exprs\)) s
+44.6 583 M
+(  \(if \(pair? exprs\)) s
+44.6 571 M
+(      \(apply r:seq) s
+44.6 559 M
+(             \(cons \(car exprs\)) s
+44.6 547 M
+(                   \(append-map \(lambda \(expr\)) s
+44.6 535 M
+(                                 \(list "\\\\|" expr\)\)) s
+44.6 523 M
+(                               \(cdr exprs\)\)\)\)) s
+44.6 511 M
+(      \(r:seq\)\)\)) s
+44.6 475 M
+(\(define \(r:repeat min max expr\)) s
+44.6 463 M
+(  \(apply r:seq) s
+44.6 451 M
+(         \(append \(make-list min expr\)) s
+44.6 439 M
+(                 \(if \(eqv? max min\)) s
+44.6 427 M
+(                     '\(\)) s
+44.6 415 M
+(                     \(if max) s
+44.6 403 M
+(                         \(make-list \(- max min\)) s
+44.6 391 M
+(                                    \(r:alt expr ""\)\)) s
+44.6 379 M
+(                         \(list expr "*"\)\)\)\)\)\)) s
+_R
+S
+%%Page: (17) 17
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 17 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Mon Feb 10 10:31:22 2014) def
+/pagenumstr (17) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+44.6 679 M
+(;;; Using system's grep.) s
+44.6 667 M
+(\(define \(write-bourne-shell-grep-command expr filename\)) s
+44.6 655 M
+(  \(display \(bourne-shell-grep-command-string expr filename\)\)\)) s
+44.6 631 M
+(\(define \(bourne-shell-grep-command-string expr filename\)) s
+44.6 619 M
+(  \(string-append "grep -e ") s
+44.6 607 M
+(                 \(bourne-shell-quote-string expr\)) s
+44.6 595 M
+(                 " ") s
+44.6 583 M
+(                 filename\)\)) s
+44.6 559 M
+(;;; Works for any string without newlines.) s
+44.6 547 M
+(\(define \(bourne-shell-quote-string string\)) s
+44.6 535 M
+(  \(list->string) s
+44.6 523 M
+(   \(append \(list #\\'\)) s
+44.6 511 M
+(           \(append-map \(lambda \(char\)) s
+44.6 499 M
+(                         \(if \(char=? char #\\'\)) s
+44.6 487 M
+(                             \(list #\\' #\\\\ char #\\'\)) s
+44.6 475 M
+(                             \(list char\)\)\)) s
+44.6 463 M
+(                       \(string->list string\)\)) s
+44.6 451 M
+(           \(list #\\'\)\)\)\)) s
+44.6 415 M
+(;;; This is MIT/Scheme specific and compatible with grep for the) s
+44.6 403 M
+(;;; purposes of this code.) s
+44.6 379 M
+(\(load-option 'synchronous-subprocess\)) s
+44.6 355 M
+(\(define \(r:grep expr filename\)) s
+44.6 343 M
+(  \(let \(\(port \(open-output-string\)\)\)) s
+44.6 331 M
+(    \(and \(= \(run-shell-command) s
+44.6 319 M
+(             \(bourne-shell-grep-command-string expr filename\)) s
+44.6 307 M
+(             'output port\)) s
+44.6 295 M
+(            0\)) s
+44.6 283 M
+(         \(r:split-lines \(get-output-string port\)\)\)\)\)) s
+44.6 259 M
+(\(define \(r:split-lines string\)) s
+44.6 247 M
+(  \(reverse) s
+44.6 235 M
+(   \(let \(\(end \(string-length string\)\)\)) s
+44.6 223 M
+(     \(let loop \(\(i 0\) \(lines '\(\)\)\)) s
+44.6 211 M
+(       \(if \(< i end\)) s
+44.6 199 M
+(           \(let \(\(j) s
+44.6 187 M
+(                  \(substring-find-next-char string i end #\\newline\)\)\)) s
+44.6 175 M
+(             \(if j) s
+44.6 163 M
+(                 \(loop \(+ j 1\)) s
+44.6 151 M
+(                       \(cons \(substring string i j\) lines\)\)) s
+44.6 139 M
+(                 \(cons \(substring string i end\) lines\)\)\)) s
+44.6 127 M
+(           lines\)\)\)\)\)) s
+_R
+S
+%%Page: (18) 18
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 18 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Mon Feb 10 10:31:22 2014) def
+/pagenumstr (18) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+44.6 679 M
+(#|) s
+44.6 667 M
+(;;; For example...) s
+44.6 643 M
+(\(pp \(r:grep \(r:seq \(r:quote "a"\) \(r:dot\) \(r:quote "c"\)\) "tests.txt"\)\)) s
+44.6 631 M
+(\("[00]. abc") s
+44.6 619 M
+( "[01]. aac") s
+44.6 607 M
+( "[02]. acc") s
+44.6 595 M
+( "[03]. zzzaxcqqq") s
+44.6 583 M
+( "[10]. catcatdogdog") s
+44.6 571 M
+( "[12]. catcatcatdogdogdog"\)) s
+44.6 559 M
+(;Unspecified return value) s
+44.6 535 M
+(;;; And...) s
+44.6 511 M
+(\(pp \(r:grep \(r:alt \(r:quote "foo"\) \(r:quote "bar"\) \(r:quote "baz"\)\)) s
+44.6 499 M
+(            "tests.txt"\)\)) s
+44.6 487 M
+(\("[05]. foo" "[06]. bar" "[07]. foo bar baz quux"\)) s
+44.6 475 M
+(;Unspecified return value) s
+44.6 439 M
+(\(pp \(r:grep \(r:repeat 3 5 \(r:alt \(r:quote "cat"\) \(r:quote "dog"\)\)\)) s
+44.6 427 M
+(            "tests.txt"\)\)) s
+44.6 415 M
+(\("[09]. catdogcat") s
+44.6 403 M
+( "[10]. catcatdogdog") s
+44.6 391 M
+( "[11]. dogdogcatdogdog") s
+44.6 379 M
+( "[12]. catcatcatdogdogdog") s
+44.6 367 M
+( "[13]. acatdogdogcats") s
+44.6 355 M
+( "[14]. ifacatdogdogs") s
+44.6 343 M
+( "[15]. acatdogdogsme"\)) s
+44.6 331 M
+(;Unspecified return value) s
+44.6 307 M
+(\(pp) s
+44.6 295 M
+( \(r:grep \(r:seq " ") s
+44.6 283 M
+(                \(r:repeat 3 5 \(r:alt \(r:quote "cat"\) \(r:quote "dog"\)\)\)) s
+44.6 271 M
+(                \(r:eol\)\) ) s
+44.6 259 M
+(         "tests.txt"\)\)) s
+44.6 247 M
+(\("[09]. catdogcat" "[10]. catcatdogdog" "[11]. dogdogcatdogdog"\)) s
+44.6 235 M
+(;Unspecified return value) s
+_R
+S
+%%Page: (19) 19
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 19 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Mon Feb 10 10:31:22 2014) def
+/pagenumstr (19) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+44.6 679 M
+(\(pp) s
+44.6 667 M
+( \(r:grep) s
+44.6 655 M
+(  \(let \(\(digit ) s
+44.6 643 M
+(         \(r:char-from "0123456789"\)\)\)) s
+44.6 631 M
+(    \(r:seq \(r:bol\)) s
+44.6 619 M
+(           \(r:quote "["\)) s
+44.6 607 M
+(           digit) s
+44.6 595 M
+(           digit) s
+44.6 583 M
+(           \(r:quote "]"\)) s
+44.6 571 M
+(           \(r:quote "."\)) s
+44.6 559 M
+(           \(r:quote " "\)) s
+44.6 547 M
+(           \(r:char-from "ab"\)) s
+44.6 535 M
+(           \(r:repeat 3 5 \(r:alt "cat" "dog"\)\)) s
+44.6 523 M
+(           \(r:char-not-from "def"\)) s
+44.6 511 M
+(           \(r:eol\)\)\)) s
+44.6 499 M
+(  "tests.txt"\)\)) s
+44.6 487 M
+(\("[13]. acatdogdogcats"\)) s
+44.6 475 M
+(;Unspecified return value) s
+44.6 463 M
+(|#) s
+_R
+S
+%%Page: (20) 20
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 20 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Mon Feb 10 10:31:22 2014) def
+/pagenumstr (20) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+44.6 679 M
+(;;; This is the file tests.txt) s
+44.6 655 M
+([00]. abc) s
+44.6 643 M
+([01]. aac) s
+44.6 631 M
+([02]. acc) s
+44.6 619 M
+([03]. zzzaxcqqq) s
+44.6 607 M
+([04]. abdabec) s
+44.6 583 M
+([05]. foo) s
+44.6 571 M
+([06]. bar) s
+44.6 559 M
+([07]. foo bar baz quux) s
+44.6 547 M
+([08]. anything containing them) s
+44.6 523 M
+([09]. catdogcat) s
+44.6 511 M
+([10]. catcatdogdog) s
+44.6 499 M
+([11]. dogdogcatdogdog) s
+44.6 487 M
+([12]. catcatcatdogdogdog) s
+44.6 463 M
+([13]. acatdogdogcats) s
+44.6 451 M
+([14]. ifacatdogdogs) s
+44.6 439 M
+([15]. acatdogdogsme) s
+_R
+S
+%%Trailer
+%%Pages: 20
+%%DocumentNeededResources: font Courier-Bold Courier 
+%%EOF
