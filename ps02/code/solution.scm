@@ -334,14 +334,13 @@
 
 |#
     
- 
 ;;; sequence:get-element
 
 (define (sequence:get-element sequence pred)
   (let ((filtered-sequence (sequence:filter sequence pred)))
     (if (sequence:null? filtered-sequence)
 	#f
-	(sequence:ref filtered-sequence 0))))
+	(sequence:ref filtered-sequence 0)))) ; more general than car
 
 
 #| Tests
@@ -408,6 +407,35 @@
 
 ;;; Problem 2.2
 ;;;
+;;; Here are the amended specifications allowing for mixed types when
+;;; useful:
+
+;;; (sequence:equal? <sequence-1> <sequence-2>)
+;;;    Returns #t if the sequences have equal elements in the same
+;;;    order, otherwise returns #f.
+
+;;; (sequence:append <sequence-1> ... <sequence-n>)
+;;;    Returns a new sequence formed by concatenating the elements of
+;;;    the given sequences.  The size of the new sequence is the sum
+;;;    of the sizes of the given sequences.  The type of the new
+;;;    sequence is a list of any given sequence is a list, otherwise a
+;;;    vector if any given sequence is a vector, otherwise a string.
+
+;;; (sequence:map <function> <seq-1> ... <seq-n>)
+;;;    Requires that the sequences given are of the same size, and
+;;;    that the arity of the function is n.  The ith element of the
+;;;    new sequence is the value of the function applied to the n ith
+;;;    elements of the given sequences.  The type of the returned
+;;;    sequence is the type of the first sequence passed.
+
+;;; (sequence:for-each <procedure> <seq-1> ... <seq-n>)
+;;;    Requires that the sequences given are of the same size and that
+;;;    the arity of the procedure is n.  Applies the procedure to the
+;;;    n ith elements of the given sequences; discards the value.
+;;;    This is done for effect.
+
+
+
 ;;; First let's write the full set of coercions we need. 
 
 (define sequence:as-list (make-generic-operator 1 'as-list))
@@ -443,7 +471,6 @@
 ;;; All we have to do to implement this for sequence:append is modify
 ;;; the dispatch table for binary-append. And we need to get rid of
 ;;; the type checking in sequence:append.
-;;; TODO: Modify the specs
 
 (define (compose-1st-arg f g)
   (lambda (x y) (f (g x) y)))
@@ -497,9 +524,15 @@
 
 ;;; Problem 2.3
 ;;;
-;;; Blah blah blah about whether this is a good idea it's an OK idea. TODO
+;;; A. Adding an optional target type operation is an alright idea, but
+;;; it is really just a specific case of what we could do if we had
+;;; full variable arity dispatch. In general, while target types break
+;;; the illusion of generality provided by generic operations and seem
+;;; to duplicate the functionality of sequence:construct, they present
+;;; opportunities for improved efficiency, and as long as they are
+;;; fully optional arguments, they will not get in the user's way. 
 
-;;; If an operation takes a target type, then it should be entered
+;;; B. If an operation takes a target type, then it should be entered
 ;;; into the dispatch table with incremented arity, and when the
 ;;; operation is called without the target type, the argument slot
 ;;; typically filled by the target type will be a sentinel value.
@@ -663,29 +696,66 @@ In vector worldIn vector worldIn vector world
 ;;; general it can be used to dispatch to functions that work on
 ;;; well-chosen intermediate types, rather than just dispatching to a
 ;;; version of the function that prints something.  In general though,
-;;; this is just a  special case of variable arity functions, where
+;;; this is just a special case of variable arity functions, where
 ;;; here the optional argument is a target type. 
 
 ;;; Problem 2.4
 ;;;
-;;; Variable arity operations blah blah blah blah blah. TODO
+;;; A. Variable arity operations are a good idea, though
+;;; they come at a potentially large cost in the dispatch
+;;; procedure. Not all variable arity functions can be sanely
+;;; described as folds over the arguments with a binary function;
+;;; for example, for-each is unnatural to express this
+;;; way.
+;;;
+;;; B. The most general implementation of variable arity operations,
+;;; and the most costly, would be one that allows the arguments of a
+;;; variable arity operation to be checked as a whole by a single
+;;; predicate, such as (lambda args (expensive-predicate? args)). This
+;;; would not allow optimizations such as the use of a trie structure
+;;; in the dispatch mechanism. However, predicate dispatch is already
+;;; expensive because of the possibility of evaluating expensive
+;;; predicates at each function call, so this might not matter in the
+;;; long run. We could implement variable arity arguments by letting
+;;; make-generic-operator take an extra argument 'has-extra-arguments
+;;; which would indicate that it can take n or more arguments, where n
+;;; is the arity passed to make-generic-operator. Then defhandler
+;;; would allow a predicate to describe all the additional arguments
+;;; as a list.
+;;;
+;;; Another option, which might preserve some efficiency in the
+;;; dispatch system, would be that the user can specify a single
+;;; predicate which must be true for all of the extra arguments. Since
+;;; this predicate can be as general as we want, it seems that this
+;;; covers most of the use cases for variable arity operations. I
+;;; would implement this option.
 
 
 ;;; Problem 2.5
 ;;;
-;;; TODO write stuff
+;;; A. Louis Reasoner's idea does not guarantee that (< x y) implies (not
+;;; (< y x)), to wit:
 
 #| Tests of Louis's idea
-;1 ]=> (list<? '(1 2 3 4) '(2 1 3 4))
-
+(list<? '(1 2 3 4) '(2 1 3 4))
 ;Value: #t
 
-1 ]=> (list<? '(2 1 3 4) '(1 2 3 4))
-
+(list<? '(2 1 3 4) '(1 2 3 4))
+;Value: #t
 |#
+;;; So if this were used to sort sets, there would not be a unique
+;;; order for lists, so equivalent ones would not necessarily be
+;;; adjacent, so duplicates would appear in the set.
 
-;;; We can implement the total ordering of types by making the default
-;;; operation one where the disparate types of the arguments are
+;;; B. Alyssa's approach gains efficiency by using the ordered
+;;; evaluation of the conditions in cond to enforce the type ordering
+;;; without having to describe N^2 cases. The mechanism is not capable
+;;; of expressing partial orderings, and more importantly, it cannot
+;;; be extended except by modifying the code of generic:less?,
+;;; potentially introducing problems. 
+
+;;; C. We can implement the total ordering of types by making the default
+;;; less? operation one where arguments of disparate types are
 ;;; compared. Since a single function serves as the default operation,
 ;;; we do not have to enter N^2 entries into the table; we only have
 ;;; to specify the operations for like types and maybe some special
@@ -762,11 +832,34 @@ In vector worldIn vector worldIn vector world
 
 ;;; Problem 2.6
 ;;;
-;;; TODO write stuff
+;;; Predicate dispatch is potentially quite expensive if some of the
+;;; predicates used are expensive. For example, if I decide to have a
+;;; version of + that operates only on prime numbers, then we would be
+;;; potentially checking the primality of every number passed to +
+;;; anywhere in the program, causing great slowdowns. 
+
+;;; The problem of expensive predicates can be mitigated by
+;;; encouraging users only to use simple predicates. However, any
+;;; dispatch system adds a certain overhead to all generic function
+;;; calls, which can discourage users interested in speed from
+;;; pursuing abstraction. In a system with tag- or type-based dispatch
+;;; rather than predicate dispatch, the function calls can be cached
+;;; based on the data tag, while in a predicate-based system this is
+;;; less helpful since each argument passed to a function is likely to
+;;; be new. However, a tagged system requires more work on the part of
+;;; systems that interact with the generic dispatch system, since they
+;;; must supply the proper tags. 
+
+;;; In order to have generic dispatch with zero runtime overhead, we
+;;; need a smart compiler that can prove at compile time that certain
+;;; predicates will hold of arguments, or that certain tags should be
+;;; applied to them. Such a system could not be used in a REPL, but a
+;;; JIT-compiled system could be with relatively small overhead.
+
 
 ;;; Problem 2.7
 ;;;
-;;; Now we can integrate streams into the generic sequence
+;;; A. Now we can integrate streams into the generic sequence
 ;;; operators. 
 
 (define stream? stream-pair?)
@@ -776,7 +869,7 @@ In vector worldIn vector worldIn vector world
 
 ;;; Easy ones
 (defhandler sequence:as-list stream->list stream?)
-(defhandler sequence:null (constant '()) (is-exactly stream?))
+(defhandler sequence:null (constant (stream)) (is-exactly stream?))
 (defhandler sequence:null? stream-null? stream?)
 (defhandler sequence:ref stream-ref stream? exact-integer?)
 (defhandler sequence:size stream-length stream?)
@@ -790,8 +883,6 @@ In vector worldIn vector worldIn vector world
 (sequence:as-list (integers-starting-from 0)) 
 ;Don't do this!
 
-(sequence:null stream?)
-;Value: '()
 
 (sequence:null? (stream))
 ;Value: #t
@@ -854,6 +945,25 @@ In vector worldIn vector worldIn vector world
 (defhandler generic:binary-append append         list?   list?)
 (defhandler generic:binary-append vector-append  vector? vector?)
 (defhandler generic:binary-append stream-append  stream? stream?)
+
+;;; and some mixed types...
+(defhandler generic:binary-append 
+  (compose-1st-arg stream-append (lambda (x) (apply stream x)))
+		   list? stream?))
+(defhandler generic:binary-append 
+  (compose-2nd-arg stream-append (lambda (x) (apply stream x)))
+		   stream? list?))
+
+#| Tests
+
+(stream->list (sequence:append (stream 0 1 2) (stream 3 4 5)))
+;Value: (0 1 2 3 4 5)
+
+(stream-head (sequence:append (stream 0 1 2 3) (integers-starting-from
+						0)) 5)
+;Value: (0 1 2 3 0)
+
+|#
 
 
 ;;; sequence:generate
@@ -972,7 +1082,8 @@ In vector worldIn vector worldIn vector world
 |#
 
 
-;;; The generic dispatch system here is dangerously general.
+;;; B. The generic dispatch system here is dangerously general but not
+;;; completely so.
 
 ;;; The task of integrating streams with other sequences so that
 ;;; generic functions can be used was easy. But the task of doing this
@@ -981,10 +1092,19 @@ In vector worldIn vector worldIn vector world
 ;;; sequence:filter for strings could have just coerced the stream to
 ;;; a list, filtered, and returned a stream of the resulting list; but
 ;;; that would be inefficient and would take infinite memory if passed
-;;; an infinite stream.
+;;; an infinite stream. 
 
-;;; Infinite streams also raise some tricky issues. For example, if I
-;;; do this:
+;;; Furthermore, in the case of the variable-arity functions map and
+;;; for-each, supporting streams is even trickier because we cannot
+;;; dispatch to stream-map without a defhandler that can handle
+;;; variable arity. The current implementation of those functions
+;;; coerces everything to lists, which means we cannot support
+;;; infinite streams. An alternative would be to coerce everything to
+;;; streams. The fact that we have to do this exposes a problem in the
+;;; generality of our dispatch system.
+
+;;; Even outside of those functions, infinite streams raise issues
+;;; about halting. For example, if I do this:
 
 #| Test
 (sequence:get-element (integers-starting-from 4) (lambda (x) (= x 3)))
@@ -992,9 +1112,11 @@ In vector worldIn vector worldIn vector world
 
 ;;; I will get not #f, but nothing, as it will try to evaluate
 ;;; forever. For sequence:filter, sequence:fold, and their ilk to
-;;; determine when to stop evaluating an infinite stream is a hard
-;;; task. By adding stream operations for these generic functions, we
-;;; have introduced the danger that a user might unwittingly pass in
-;;; an infinite stream and break her computer. We should amend the
-;;; spec sheet to tell users not to do this.
+;;; determine when to stop evaluating an infinite stream is not
+;;; possible in the general case. By adding stream operations for
+;;; these generic functions, we have introduced the danger that a user
+;;; might unwittingly pass in an infinite stream and break her
+;;; computer. The spec should be amended to warn about this.
+
+
 
