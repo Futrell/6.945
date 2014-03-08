@@ -1225,3 +1225,160 @@ Y = (lambda (f)
 ;;; It turns out continuations are universal. In Haskell there's a
 ;;; paper called "The mother of all monads". It argues that
 ;;; continuations give you everything you can do with a monad. 
+
+;;; 3-7-14
+;;; 
+;;; Today we'll talk about compilation. Next Friday Guy Steele will
+;;; talk about parallel random number generation. 
+;;;
+;;; A computer is just an interpreter for some language. But direct
+;;; interpretation isn't necessarily the best way to do things. You
+;;; can also translate and then interpret. Source code -> object code
+;;; -> "hardware". From the point of view of a Lisp interpreter, the
+;;; interpreter is the "hardware" (a virtual machine). 
+;;;
+;;; How do you organize a compiler? A compiler takes your source code
+;;; as a constant and pushes it through the interpreter to determine
+;;; what it would do, and then produces symbolic results of that
+;;; sort. A basic idea is constant folding. In this case the constant
+;;; is your program.
+
+(+ 1 3) => 4
+(+ 1 'a) => (+ 1 a)
+
+;;; This is symbolic evaluation, and you're left knowing what you have
+;;; left to do. The compiler also gets to throw away parts that are
+;;; not necessary. Basically it's a kind of algebraic simplification.
+;;;
+;;; Today we'll talk about compiling to combinators. Let's do that
+;;; today for something like a general interpreter. 
+;;;
+;;; You want to transform code in some source language into something
+;;; that has a standardized interface. Separate analysis from
+;;; execution.
+
+(define (eval exp env)
+  ((analyze exp) env)) 
+
+(define analyze ; produces an execution procedure which takes an
+		; environment and does it.
+  (make-generic-operator 1
+			 (lambda (exp)
+			   (cond ((application? exp)
+				  (analyze-application exp))
+				 (else (error "Unknown exp type"))))))
+
+(define (analyze-self-evaluating exp)
+  (lambda (env) exp))
+
+(defhandler analyze analyze-self-evaluating self-evaluating?)
+
+(define (analyze-quoted exp)
+  (let ((qval (text-of-quotation exp)))
+    (lambda (env) qval)))
+
+(defhandler analyze analyze-quoted quoted?)
+
+(define (analyze-if exp)
+  (let ((pproc (analyze (if-predicate exp)))
+	(cproc (analyze (if-consequent exp)))
+	(aproc (analyze (if-alternative exp))))
+    (lambda (env)
+      (if (true? (pproc env))
+	  (cproc env)
+	  (aproc env)))))
+
+(defhandler analyze analyze-if if?)
+
+(define (analyze-lambda exp)
+  (let ((vars (lambda-parameters exp))
+	(bproc (analyze (lambda-body exp))))
+    (lambda (env) (make-procedure vars bproc env))))
+
+(defhandler analyze analyze-lambda lambda?)
+
+(define (analyze-sequence exps)
+  (define (sequentially proc1 proc2)
+    (lambda (env) (proc1 env) (proc2 env)))
+  (define (loop first-proc rest-procs)
+    (if (null? rest-procs)
+	first-proc
+	(loop (sequentially first-proc (car rest-procs))
+	      (cdr rest-procs))))
+  (let ((procs (map analyze exps)))
+    (loop (car procs) (cdr procs))))
+
+(defhandler analyze analyze-sequence begin?)
+  
+(define (analyze-application exp)
+  (let ((fproc (analyze (operator exp))) ; first have to evaluate to
+					; get the procedure
+	(aprocs (map analyze (operands exp))))
+    (lambda (env)
+      (execute-application (fproc env) 
+			   (map (lambda (aproc) (aproc env))
+				aprocs)))))
+
+(define (execute-application proc args) ; should be generic
+  (cond ((promitive-procedure? proc)
+	 (apply-primitive-procedure proc args))
+	((compound-procedure? ... etc))))
+
+;;; If you just take the elementary interpreter I showed you and time
+;;; it and then use this one you get a factor of 10 improvement.
+;;;
+;;; We're transforming the language into a different languages which
+;;; is a composition of functions only. Separation of analysis from
+;;; execution.
+;;;
+;;; Let's also talk about normal vs. applicative order. Normal order
+;;; is lazy. We have to be careful to not believe in one thing or the
+;;; other, but to be able to do both.
+;;;
+;;; Strict evaluation: Applicative order.
+;;;     Lisp, Scheme, ML, Python, Ruby, OCAML
+;;;
+;;; Call by object sharing: Assignment does not change anything
+;;; outside the local scope. However, modifying a data structure in
+;;; local scope will change that structure outside the scope. Data
+;;; push.
+;;;
+;;; Non-strict = lazy = normal order
+;;;     All languages have nonstrict conditionals. And is a macro that
+;;;     turns into nested ifs. 
+;;; 
+;;; Call-by-name was the default in ALGOL 60, and it also had
+;;; call-by-value. Say we have (+ fact (- n 4) 1). Then the (- n 4)
+;;; part has to carry an environment with it representing the value of
+;;; n; this is stored in a thunk. Haskell and R are like this. Macro
+;;; expansions are also like this.
+;;;
+;;; Normal order advantages: It terminates. Certain things don't
+;;; produce error conditions. 
+;;;
+;;; Normal order disadvantages: Arbitrarily bad space
+;;; complexity. State can't be incorporated smoothly, so it's hard to
+;;; deal with IO devices. Easier to simulate normal order in an
+;;; applicative language than it is to simulate applicative order in a
+;;; normal language. 
+;;;
+;;; I can prove to you as a joke that the universe cares about this. 
+
+double = (lambda (x) (+ x x))
+(amb u v) = u or v but I don't know which
+(double (amb -1 1)) = ?
+
+;;; In pure normal order, I take the expression which has no free
+;;; variables except amb, plug it into x for double, each one being
+;;; separately evaluated, the possibilites are {-2, 0, 2}, with a
+;;; probability of 1/4, 1/2, 1/4. 
+;;;
+;;; In applicative order the possibilities are {-2, 2}. 
+;;; 
+;;; Now think about the quantum two-slit experiment. In normal order
+;;; I'd see a distribution with lots of mass between the slits. In
+;;; applicative order I'd see a dip between them. So maybe the
+;;; universe runs on applicative order. There are also proofs that the
+;;; universe is two's compliment. Ha, ha.
+;;;
+
