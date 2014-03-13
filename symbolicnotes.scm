@@ -1379,6 +1379,169 @@ double = (lambda (x) (+ x x))
 ;;; I'd see a distribution with lots of mass between the slits. In
 ;;; applicative order I'd see a dip between them. So maybe the
 ;;; universe runs on applicative order. There are also proofs that the
-;;; universe is two's compliment. Ha, ha.
+;;; universe is two's complement. Ha, ha.
 ;;;
 
+;;; 3-10-14
+;;;
+;;; Today is amb day. 
+;;; In microtubules in cells, you have a generator and a tester. You
+;;; can think of this as a noise filter but messages can be sent back
+;;; to the generator so it knows what to avoid. 
+;;; 
+;;; Now you have something that doesn't know the goal, and something
+;;; that doesn't know how to generate alternatives. 
+;;;
+;;; Example: Square roots. THere are two solutions. Let's make a
+;;; square root function that provides an answer and a complaint
+;;; department. 
+;;;
+;;; McCarthy invented the amb operator: (amb 1 2 3) is one of those
+;;; but I don't know which. 
+
+(list (amb 1 2 3) (amb 'a 'b))
+
+;;; There are six possibilities. It's very easy to write a program
+;;; that is exponentially long in time this way. 
+
+(define (a-pythagorean-triple-between low high)
+  (let ((i (an-integer-between low high)))
+    (let ((j (an-integer-between i high)))
+      (let ((k (an-integer-between j high)))
+	(require (= (+ (* i i) (* j j) (* k k)))
+		 (list i j k))))))
+
+(define (an-integer-between low high)
+  (require (<= low high))
+  (amb low (an-integer-between (+ low 1) high)))
+
+(define (require p) (if (not p) (amb))) ; amb of no args is a
+					; contradiction
+
+;;; Constraint satisfaction.
+
+(define (multiple-dwelling)
+  (let ((baker (amb 1 2 3 4 5))
+    ...etc)
+    (require (distinct? (list baker cooper ...etc)))
+    (require (not (= baker 5)))
+    ...etc
+    (list (list 'baker baker) ...etc)))
+
+;;; Now (multiple-dwelling) works!
+;;; SEND+MORE=MONEY: What are the values of the letters?
+
+(define (send-more-money)
+  (let ((m 1)
+	(s (amb 2 3 4 5 6 7 8 9)))
+    ...etc))
+
+;;; Amb-evaluator in SICP produces depth-first chronological
+;;; backtracking, a lousy way to do it. Hitting an amb of no arguments
+;;; (a constradiction) doesn't give you enough information to know
+;;; what not to do again. 
+
+;;; Now I'll show you some of the evil. Last time we did compilation
+;;; to combinators like this:
+
+(lambda (env) doit)
+
+;;; But now I have to do:
+
+(lambda (env success fail)) ; fail is complaint department 1
+
+;;; The only way it returns a value is by doing:
+
+(succeed value 
+	 (lambda () complaint-action)) ; complaint department 2
+
+;;; The (lambda (env success fail) ...) will either call success with
+;;; the result or call fail. (But how do you do with continuations or
+;;; monads so we don't have to change our compilation? Whenever you
+;;; have to make plumbing like this, you can do it with monads or
+;;; continuations.)
+
+(define (analyze-self-evaluating exp)
+  (lambda (env succeed fail)
+    (succeed exp fail)))
+
+(define (analyze-variable exp)
+  (lambda (env succeed fail)
+    (succeed (lookup-variable-value exp env)
+	     fail)))
+
+;;; This is the same stuff we've seen before but twisted into a
+;;; continuation passing style. 
+
+(define (analyze-amb exp)
+  (let ((aprocs
+	 (map analyze (amb-alternatives exp))))
+    (lambda (env succeed fail)
+      (let loop ((alts aprocs))
+	(if (null? alts)
+	    (fail) ; I ran out of alternatives so I'm calling fail.
+	    ((car alts) env ; Call the first one with the environment
+	     succeed 
+	     (lambda () ; If someone doesn't like the result they can
+			; call this, which goes around the loop with
+			; the rest of the alternatives.
+	       (loop (cdr alts)))))))))
+
+(define (analyze-sequence exps)
+  (define (sequentially a b)
+    (lambda (env succeed fail)
+      (a env
+	 ;; success cont. for calling a
+	 (lambda (a-value fail2) ; if a succeeds, it gets the value a
+				 ; which we're going to discard
+				 ; because it's a sequence of things
+				 ; being done. Then I call b but b
+				 ; gets the success for the whole
+				 ; thing and the failure coming from
+				 ; the failure of a. So if we have
+				 ; (require (not (= smith 4))) and
+				 ; (require (> cooper whatever)), then
+				 ; we say that if a later one hits a
+				 ; contradiction, then I'll call the
+				 ; failure continuation of the first
+				 ; guy which says give me a different
+				 ; choice for where smith might live.
+	   (b env succeed fail2))
+	 ;; failure cont. for calling a
+	 fail))) ; if a doesn't like its environment it will call this
+  (define (loop first-proc rest-procs)
+    (if (null? rest-procs)
+	first-proc
+	(loop (sequentially first-proc
+			    (car rest-procs))
+	      (cdr rest-procs))))
+  (let ((procs (map analyze exps)))
+    (if (null? procs)
+	(error "empty sequence"))
+    (loop (car procs) (cdr procs))))
+
+(define (analyze-application exp)
+  (let ((fproc (analyze (operator exp)))
+	(aprocs (map analyze (operands exp))))
+    (lambda (env succeed fail)
+      (fproc env
+	     (lambda (proc fail2)
+	       (get-args aprocs env
+			 (lambda (args fail3)
+			   (execute-application
+			    proc args succeed fail3))
+			 fail2))
+	     fail1))))
+
+;;; Q. Isn't this just as bad as GOTO? A. It's easy to write macros
+;;; turning gotos and local assignments into one that has no gotos and
+;;; only procedure calls. We wrote this as a reply to Dijkstra. So
+;;; GOTO is not the problem. The problem is how you structure your
+;;; program.
+
+;;; We start with functional programs: no side effects. 
+;;; Assignments (mutators) are special because there's a moment before
+;;; and after. This creates linear time.
+;;; Nondeterministic search (amb): branching of time into possible
+;;; futures. 
+;;; Concurrency: Now you have a lattice. 
