@@ -1545,3 +1545,135 @@ double = (lambda (x) (+ x x))
 ;;; Nondeterministic search (amb): branching of time into possible
 ;;; futures. 
 ;;; Concurrency: Now you have a lattice. 
+
+;;; 3-17-14
+;;;
+;;; Today I'll show how we can make a depth-first amb in Scheme using
+;;; continuations. I want to do this:
+
+(define elementary-backtrack-test
+  (lambda ()
+    (let ((x (amb 1 2 3)))
+      (let ((y (amb 'a 'b)))
+	(let ((z (amb #t #f)))
+	  (pp (list x y z)))))
+    (amb)))
+
+(with-depth-first-schedule elementary-backtrack-test)
+(1 a #t)
+(1 a #f)
+; etc.
+
+;;; I'll introduce amb as a syntactic object by means of a macro.
+
+(define-syntax amb
+  (sc-macro-transformer
+   (lambda (form uenv) ; take an expr that begins with amb and produce
+		       ; an amb-list which has a list of lambda () alternatives.
+     `(amb-list 
+       (list
+	,@(map (lambda (arg)
+		 `(lambda ()
+		    ,(close-syntax arg uenv))) ; this is a syntactic
+					; closure. 
+	       (cdr form)))))))
+
+;;; Here's what's funny about macros.
+
+(defmacro push! (item place)
+  `(set! ,place (cons ,item ,place)))
+
+;;; But we get inadvertent capture:
+
+(let ((cons '()))
+  (push! 'short cons)
+  (push! 'long cons)
+  cons)
+
+;;; that expands to nonsense:
+
+(let ((cons '()))
+  (set! cons (cons 'short cons))
+  (set! cons (cons 'long cons))
+  cons)
+
+;;; On the other hand, a hygienic macro system automatically knows
+;;; there are things that are local to the macro def and things that
+;;; are part of the user's environment. It will automatically rename
+;;; the user's let-defined cons to cons.1 or something. 
+
+;;; Here's another possible macro system that people use, which uses
+;;; "...":
+
+(define-syntax amb
+  (syntax-rules
+      ((amb alternative ...)
+       (amb-list (list (lambda () alternative)
+		       ...)))))
+
+
+;;; Now here's how we can embed amb in the real thing.
+
+(define (amb-list alternatives)
+  (call-with-current-continuation ; remember what the amb returns to
+   (lambda (k)
+     (add-to-search-schedule
+      (map (lambda (alternative)
+	     (lambda () ; delay evaluation
+	       (within-continuation k
+				    alternative)))
+	   alternatives))
+     (yield)))) 
+
+(define (yield)
+  (if (stack&queue-empty? *search-schedule*)
+      (*top-level* #f)
+      ((pop! *search-schedule*))))
+
+(define (add-to-depth-first-search-schedule alts)
+  (for-each (lambda (alt)
+	      (push! *search-schedule* alt))
+	    (reverse alts)))
+
+(define (add-to-breadth-first-search-schedule alts)
+  (for-each (lambda (alt)
+	      (add-to-end! *search-schedule* alt))
+	    alts))
+
+(define (with-depth-first-schedule thunk)
+  (call-with-current-continuation
+   (lambda (k)
+     (fluid-let
+	 ((add-to-search-schedule
+	   add-to-depth-first-search-schedule)
+	  (*search-schedule*
+	   (empty-search-schedule))
+	  (*top-level k))
+       (thunk)))))
+
+;;; Now you can do the backtracking code from the beginning,
+;;; depth-first or breadth-first. Consider that if there's side
+;;; effects, breadth-first makes no sense at all. 
+
+;;; Two kinds of assignments: one you backtrack over and one that is
+;;; permanent. mit-scheme's set! is persistent. However, I could
+;;; prouce an alternative amb-set!
+
+(define-syntax amb-set!
+  (sc-macro-transformer
+   (lambda (form uenv)
+     (compile-amb-set (cadr form)
+		      (caddr form)
+		      uenv))))
+
+(define (compile-amb-set var val-expr uenv)
+  (let ((var (close-syntax var uenv))
+	(val (close-syntax val-expr uenv)))
+    `(let ...)))
+
+;;; With amb I can write a program that doesn't know there's more than
+;;; one answer. It's a way of factoring out some loops. On the other
+;;; hand I might want to collect all the results of some amb
+;;; thing. Make amb-collect-values. The moral of the story is the
+;;; power of continuations. We'll deal with this a lot in upcoming
+;;; weeks. How do you make a timesharing system? Coroutines? 
