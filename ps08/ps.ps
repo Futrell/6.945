@@ -1,0 +1,1459 @@
+%!PS-Adobe-3.0
+%%BoundingBox: 18 36 594 756
+%%Title: letter
+%%Creator: GNU Enscript 1.6.5.2
+%%CreationDate: Tue Apr  8 18:28:42 2014
+%%Orientation: Portrait
+%%Pages: (atend)
+%%DocumentMedia: Letter 612 792 0 () ()
+%%DocumentNeededResources: (atend)
+%%EndComments
+%%BeginProlog
+%%BeginResource: procset Enscript-Prolog 1.6.5 2
+%
+% Procedures.
+%
+
+/_S {	% save current state
+  /_s save def
+} def
+/_R {	% restore from saved state
+  _s restore
+} def
+
+/S {	% showpage protecting gstate
+  gsave
+  showpage
+  grestore
+} bind def
+
+/MF {	% fontname newfontname -> -	make a new encoded font
+  /newfontname exch def
+  /fontname exch def
+
+  /fontdict fontname findfont def
+  /newfont fontdict maxlength dict def
+
+  fontdict {
+    exch
+    dup /FID eq {
+      % skip FID pair
+      pop pop
+    } {
+      % copy to the new font dictionary
+      exch newfont 3 1 roll put
+    } ifelse
+  } forall
+
+  newfont /FontName newfontname put
+
+  % insert only valid encoding vectors
+  encoding_vector length 256 eq {
+    newfont /Encoding encoding_vector put
+  } if
+
+  newfontname newfont definefont pop
+} def
+
+/MF_PS { % fontname newfontname -> -	make a new font preserving its enc
+  /newfontname exch def
+  /fontname exch def
+
+  /fontdict fontname findfont def
+  /newfont fontdict maxlength dict def
+
+  fontdict {
+    exch
+    dup /FID eq {
+      % skip FID pair
+      pop pop
+    } {
+      % copy to the new font dictionary
+      exch newfont 3 1 roll put
+    } ifelse
+  } forall
+
+  newfont /FontName newfontname put
+
+  newfontname newfont definefont pop
+} def
+
+/SF { % fontname width height -> -	set a new font
+  /height exch def
+  /width exch def
+
+  findfont
+  [width 0 0 height 0 0] makefont setfont
+} def
+
+/SUF { % fontname width height -> -	set a new user font
+  /height exch def
+  /width exch def
+
+  /F-gs-user-font MF
+  /F-gs-user-font width height SF
+} def
+
+/SUF_PS { % fontname width height -> -	set a new user font preserving its enc
+  /height exch def
+  /width exch def
+
+  /F-gs-user-font MF_PS
+  /F-gs-user-font width height SF
+} def
+
+/M {moveto} bind def
+/s {show} bind def
+
+/Box {	% x y w h -> -			define box path
+  /d_h exch def /d_w exch def /d_y exch def /d_x exch def
+  d_x d_y  moveto
+  d_w 0 rlineto
+  0 d_h rlineto
+  d_w neg 0 rlineto
+  closepath
+} def
+
+/bgs {	% x y height blskip gray str -> -	show string with bg color
+  /str exch def
+  /gray exch def
+  /blskip exch def
+  /height exch def
+  /y exch def
+  /x exch def
+
+  gsave
+    x y blskip sub str stringwidth pop height Box
+    gray setgray
+    fill
+  grestore
+  x y M str s
+} def
+
+/bgcs { % x y height blskip red green blue str -> -  show string with bg color
+  /str exch def
+  /blue exch def
+  /green exch def
+  /red exch def
+  /blskip exch def
+  /height exch def
+  /y exch def
+  /x exch def
+
+  gsave
+    x y blskip sub str stringwidth pop height Box
+    red green blue setrgbcolor
+    fill
+  grestore
+  x y M str s
+} def
+
+% Highlight bars.
+/highlight_bars {	% nlines lineheight output_y_margin gray -> -
+  gsave
+    setgray
+    /ymarg exch def
+    /lineheight exch def
+    /nlines exch def
+
+    % This 2 is just a magic number to sync highlight lines to text.
+    0 d_header_y ymarg sub 2 sub translate
+
+    /cw d_output_w cols div def
+    /nrows d_output_h ymarg 2 mul sub lineheight div cvi def
+
+    % for each column
+    0 1 cols 1 sub {
+      cw mul /xp exch def
+
+      % for each rows
+      0 1 nrows 1 sub {
+        /rn exch def
+        rn lineheight mul neg /yp exch def
+        rn nlines idiv 2 mod 0 eq {
+	  % Draw highlight bar.  4 is just a magic indentation.
+	  xp 4 add yp cw 8 sub lineheight neg Box fill
+	} if
+      } for
+    } for
+
+  grestore
+} def
+
+% Line highlight bar.
+/line_highlight {	% x y width height gray -> -
+  gsave
+    /gray exch def
+    Box gray setgray fill
+  grestore
+} def
+
+% Column separator lines.
+/column_lines {
+  gsave
+    .1 setlinewidth
+    0 d_footer_h translate
+    /cw d_output_w cols div def
+    1 1 cols 1 sub {
+      cw mul 0 moveto
+      0 d_output_h rlineto stroke
+    } for
+  grestore
+} def
+
+% Column borders.
+/column_borders {
+  gsave
+    .1 setlinewidth
+    0 d_footer_h moveto
+    0 d_output_h rlineto
+    d_output_w 0 rlineto
+    0 d_output_h neg rlineto
+    closepath stroke
+  grestore
+} def
+
+% Do the actual underlay drawing
+/draw_underlay {
+  ul_style 0 eq {
+    ul_str true charpath stroke
+  } {
+    ul_str show
+  } ifelse
+} def
+
+% Underlay
+/underlay {	% - -> -
+  gsave
+    0 d_page_h translate
+    d_page_h neg d_page_w atan rotate
+
+    ul_gray setgray
+    ul_font setfont
+    /dw d_page_h dup mul d_page_w dup mul add sqrt def
+    ul_str stringwidth pop dw exch sub 2 div ul_h_ptsize -2 div moveto
+    draw_underlay
+  grestore
+} def
+
+/user_underlay {	% - -> -
+  gsave
+    ul_x ul_y translate
+    ul_angle rotate
+    ul_gray setgray
+    ul_font setfont
+    0 0 ul_h_ptsize 2 div sub moveto
+    draw_underlay
+  grestore
+} def
+
+% Page prefeed
+/page_prefeed {		% bool -> -
+  statusdict /prefeed known {
+    statusdict exch /prefeed exch put
+  } {
+    pop
+  } ifelse
+} def
+
+% Wrapped line markers
+/wrapped_line_mark {	% x y charwith charheight type -> -
+  /type exch def
+  /h exch def
+  /w exch def
+  /y exch def
+  /x exch def
+
+  type 2 eq {
+    % Black boxes (like TeX does)
+    gsave
+      0 setlinewidth
+      x w 4 div add y M
+      0 h rlineto w 2 div 0 rlineto 0 h neg rlineto
+      closepath fill
+    grestore
+  } {
+    type 3 eq {
+      % Small arrows
+      gsave
+        .2 setlinewidth
+        x w 2 div add y h 2 div add M
+        w 4 div 0 rlineto
+        x w 4 div add y lineto stroke
+
+        x w 4 div add w 8 div add y h 4 div add M
+        x w 4 div add y lineto
+	w 4 div h 8 div rlineto stroke
+      grestore
+    } {
+      % do nothing
+    } ifelse
+  } ifelse
+} def
+
+% EPSF import.
+
+/BeginEPSF {
+  /b4_Inc_state save def    		% Save state for cleanup
+  /dict_count countdictstack def	% Count objects on dict stack
+  /op_count count 1 sub def		% Count objects on operand stack
+  userdict begin
+  /showpage { } def
+  0 setgray 0 setlinecap
+  1 setlinewidth 0 setlinejoin
+  10 setmiterlimit [ ] 0 setdash newpath
+  /languagelevel where {
+    pop languagelevel
+    1 ne {
+      false setstrokeadjust false setoverprint
+    } if
+  } if
+} bind def
+
+/EndEPSF {
+  count op_count sub { pos } repeat	% Clean up stacks
+  countdictstack dict_count sub { end } repeat
+  b4_Inc_state restore
+} bind def
+
+% Check PostScript language level.
+/languagelevel where {
+  pop /gs_languagelevel languagelevel def
+} {
+  /gs_languagelevel 1 def
+} ifelse
+%%EndResource
+%%BeginResource: procset Enscript-Encoding-88591 1.6.5 2
+/encoding_vector [
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/space        	/exclam       	/quotedbl     	/numbersign   	
+/dollar       	/percent      	/ampersand    	/quoteright   	
+/parenleft    	/parenright   	/asterisk     	/plus         	
+/comma        	/hyphen       	/period       	/slash        	
+/zero         	/one          	/two          	/three        	
+/four         	/five         	/six          	/seven        	
+/eight        	/nine         	/colon        	/semicolon    	
+/less         	/equal        	/greater      	/question     	
+/at           	/A            	/B            	/C            	
+/D            	/E            	/F            	/G            	
+/H            	/I            	/J            	/K            	
+/L            	/M            	/N            	/O            	
+/P            	/Q            	/R            	/S            	
+/T            	/U            	/V            	/W            	
+/X            	/Y            	/Z            	/bracketleft  	
+/backslash    	/bracketright 	/asciicircum  	/underscore   	
+/quoteleft    	/a            	/b            	/c            	
+/d            	/e            	/f            	/g            	
+/h            	/i            	/j            	/k            	
+/l            	/m            	/n            	/o            	
+/p            	/q            	/r            	/s            	
+/t            	/u            	/v            	/w            	
+/x            	/y            	/z            	/braceleft    	
+/bar          	/braceright   	/tilde        	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/space        	/exclamdown   	/cent         	/sterling     	
+/currency     	/yen          	/brokenbar    	/section      	
+/dieresis     	/copyright    	/ordfeminine  	/guillemotleft	
+/logicalnot   	/hyphen       	/registered   	/macron       	
+/degree       	/plusminus    	/twosuperior  	/threesuperior	
+/acute        	/mu           	/paragraph    	/bullet       	
+/cedilla      	/onesuperior  	/ordmasculine 	/guillemotright	
+/onequarter   	/onehalf      	/threequarters	/questiondown 	
+/Agrave       	/Aacute       	/Acircumflex  	/Atilde       	
+/Adieresis    	/Aring        	/AE           	/Ccedilla     	
+/Egrave       	/Eacute       	/Ecircumflex  	/Edieresis    	
+/Igrave       	/Iacute       	/Icircumflex  	/Idieresis    	
+/Eth          	/Ntilde       	/Ograve       	/Oacute       	
+/Ocircumflex  	/Otilde       	/Odieresis    	/multiply     	
+/Oslash       	/Ugrave       	/Uacute       	/Ucircumflex  	
+/Udieresis    	/Yacute       	/Thorn        	/germandbls   	
+/agrave       	/aacute       	/acircumflex  	/atilde       	
+/adieresis    	/aring        	/ae           	/ccedilla     	
+/egrave       	/eacute       	/ecircumflex  	/edieresis    	
+/igrave       	/iacute       	/icircumflex  	/idieresis    	
+/eth          	/ntilde       	/ograve       	/oacute       	
+/ocircumflex  	/otilde       	/odieresis    	/divide       	
+/oslash       	/ugrave       	/uacute       	/ucircumflex  	
+/udieresis    	/yacute       	/thorn        	/ydieresis    	
+] def
+%%EndResource
+%%EndProlog
+%%BeginSetup
+%%IncludeResource: font Courier-Bold
+%%IncludeResource: font Courier
+/HFpt_w 10 def
+/HFpt_h 10 def
+/Courier /HF-gs-font MF
+/HF /HF-gs-font findfont [HFpt_w 0 0 HFpt_h 0 0] makefont def
+/Courier-Bold /F-gs-font MF
+/F-gs-font 10 10 SF
+/#copies 1 def
+% Pagedevice definitions:
+gs_languagelevel 1 gt {
+  <<
+    /PageSize [612 792] 
+  >> setpagedevice
+} if
+%%BeginResource: procset Enscript-Header-simple 1.6.5 2
+
+/do_header {	% print default simple header
+  gsave
+    d_header_x d_header_y HFpt_h 3 div add translate
+
+    HF setfont
+    user_header_p {
+      5 0 moveto user_header_left_str show
+
+      d_header_w user_header_center_str stringwidth pop sub 2 div
+      0 moveto user_header_center_str show
+
+      d_header_w user_header_right_str stringwidth pop sub 5 sub
+      0 moveto user_header_right_str show
+    } {
+      5 0 moveto fname show
+      45 0 rmoveto fmodstr show
+      45 0 rmoveto pagenumstr show
+    } ifelse
+
+  grestore
+} def
+%%EndResource
+/d_page_w 576 def
+/d_page_h 720 def
+/d_header_x 0 def
+/d_header_y 705 def
+/d_header_w 576 def
+/d_header_h 15 def
+/d_footer_x 0 def
+/d_footer_y 0 def
+/d_footer_w 576 def
+/d_footer_h 0 def
+/d_output_w 576 def
+/d_output_h 705 def
+/cols 1 def
+%%EndSetup
+%%Page: (1) 1
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 1 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Tue Apr 08 18:28:32 2014) def
+/pagenumstr (1) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+41 681 M
+(                MASSACHVSETTS INSTITVTE OF TECHNOLOGY) s
+41 670 M
+(      Department of Electrical Engineering and Computer Science) s
+41 648 M
+(                       6.945/6.S081 Spring 2014) s
+41 637 M
+(                            Problem Set 8) s
+41 615 M
+(  Issued: Wed. 9 Apr. 2014                 Due: Wed. 16 Apr. 2014) s
+41 593 M
+(This is the last problem set for 6.S081.  There is one more for 6.945.) s
+41 571 M
+(Readings:) s
+41 549 M
+(  Online MIT/GNU Scheme Documentation,) s
+41 538 M
+(     Section 10.6: Streams         - cons-stream, etc.) s
+41 527 M
+(     Section  2.3: Dynamic Binding - fluid-let) s
+41 516 M
+(     Section 12.4: Continuations   - call-with-current-continuation &) s
+41 505 M
+(                                                within-continuation) s
+41 483 M
+(  Here is a nice paper about continuations and threads:) s
+41 472 M
+(      http://repository.readscheme.org/ftp/papers/sw2003/Threads.pdf) s
+41 450 M
+(  In fact, there is an entire bibliography of stuff about this on:) s
+41 439 M
+(      http://library.readscheme.org/page6.html) s
+41 417 M
+(  The MIT/GNU Scheme reference manual is here:) s
+41 406 M
+(      http://www.gnu.org/software/mit-scheme/documentation/mit-scheme-ref/) s
+41 384 M
+(Code:  load.scm, conspire.scm, try-two-ways.scm \(attached\)) s
+41 351 M
+(            On The Fringes of Fun with Control Structures) s
+41 329 M
+(To warm up with continuations, let's review a variety of ways to solve) s
+41 318 M
+(a famous problem, the classic "same fringe" problem.) s
+41 296 M
+(The "fringe" of a tree is defined to be the ordered list of terminal) s
+41 285 M
+(leaves of the tree encountered when the tree is traversed in some) s
+41 274 M
+(standard order, say depth-first left-to-right.  We can easily compute) s
+41 263 M
+(the fringe of a tree represented as a list structure.  In the programs) s
+41 252 M
+(that follow we add an explicit test to exclude the empty list from the) s
+41 241 M
+(answer:) s
+41 219 M
+(     \(define \(fringe subtree\)) s
+41 208 M
+(       \(cond \(\(pair? subtree\)) s
+41 197 M
+(              \(append \(fringe \(car subtree\)\)) s
+41 186 M
+(                      \(fringe \(cdr subtree\)\)\)\)) s
+41 175 M
+(             \(\(null? subtree\) '\(\)\)) s
+41 164 M
+(             \(else \(list subtree\)\)\)\)) s
+41 142 M
+(Where append is usually defined as:) s
+41 120 M
+(     \(define \(append l1 l2\)) s
+41 109 M
+(       \(if \(pair? l1\)) s
+41 98 M
+(           \(cons \(car l1\) \(append \(cdr l1\) l2\)\)) s
+41 87 M
+(           l2\)\)) s
+_R
+S
+%%Page: (2) 2
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 2 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Tue Apr 08 18:28:32 2014) def
+/pagenumstr (2) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+41 681 M
+(So the fringe of a typical tree is:) s
+41 659 M
+(#|) s
+41 648 M
+(     \(fringe '\(\(a b\) c \(\(d\)\) e \(f \(\(g h\)\)\)\)\)) s
+41 637 M
+(     ;Value: \(a b c d e f g h\)) s
+41 615 M
+(     \(fringe '\(a b c \(\(d\) \(\) e\) \(f \(g \(h\)\)\)\)\)) s
+41 604 M
+(     ;Value: \(a b c d e f g h\)) s
+41 593 M
+(|#) s
+41 571 M
+(That was a horribly inefficient computation, because append keeps) s
+41 560 M
+(copying parts of the fringe over and over.) s
+41 538 M
+(-------------) s
+41 527 M
+(Problem 8.1:) s
+41 505 M
+(What is the worst-case algorithmic complexity of this procedure in) s
+41 494 M
+(both time and space?  This is a bit tricky because your answer depends) s
+41 483 M
+(on how you decide to measure the input argument.  Is it the length of) s
+41 472 M
+(the fringe?  The number of nodes?  Is the depth of the tree relevant?) s
+41 461 M
+(So make sure you explain your answer clearly.) s
+41 439 M
+(For example, O\(N\), O\(N lg N\), O\(N^2\), etc. might all be correct) s
+41 428 M
+(depending on how you define N.  Please be specific.) s
+41 417 M
+(-------------) s
+41 384 M
+(Here is a nicer procedure that computes the fringe, without any) s
+41 373 M
+(nasty re-copying.) s
+41 351 M
+(     \(define \(fringe subtree\)) s
+41 340 M
+(       \(define \(walk subtree ans\)) s
+41 329 M
+(         \(cond \(\(pair? subtree\)) s
+41 318 M
+(                \(walk \(car subtree\)) s
+41 307 M
+(                      \(walk \(cdr subtree\) ans\)\)\)) s
+41 296 M
+(               \(\(null? subtree\) ans\)) s
+41 285 M
+(               \(else \(cons subtree ans\)\)\)\)) s
+41 274 M
+(       \(walk subtree '\(\)\)\)) s
+41 252 M
+(So the "same fringe" problem appears really simple:) s
+41 230 M
+(     \(define \(same-fringe? tree1 tree2\)) s
+41 219 M
+(       \(equal? \(fringe tree1\) \(fringe tree2\)\)\)) s
+41 197 M
+(Indeed, this works:) s
+41 175 M
+(     #|) s
+41 164 M
+(     \(same-fringe? '\(\(a b\) c \(\(d\)\) e \(f \(\(g h\)\)\)\)) s
+41 153 M
+(                   '\(a b c \(\(d\) \(\) e\) \(f \(g \(h\)\)\)\)\)) s
+41 142 M
+(     ;Value: #t) s
+41 120 M
+(     \(same-fringe? '\(\(a b\) c \(\(d\)\) e \(f \(\(g h\)\)\)\)) s
+41 109 M
+(                   '\(a b c \(\(d\) \(\) e\) \(g \(f \(h\)\)\)\)\)) s
+41 98 M
+(     ;Value: #f) s
+41 87 M
+(     |#) s
+41 65 M
+(Unfortunately, this requires computing the entire fringe of each tree) s
+41 54 M
+(before comparing the fringes.  Suppose that the trees were very big,) s
+41 43 M
+(but that they were likely to differ early in the fringe.  This would) s
+41 32 M
+(be a terrible strategy.  We would rather have a way of generating the) s
+41 21 M
+(next element of the fringe of each tree only as needed to compare them.) s
+_R
+S
+%%Page: (3) 3
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 3 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Tue Apr 08 18:28:32 2014) def
+/pagenumstr (3) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+41 681 M
+(One way to do this is with "lazy evaluation".  This method requires) s
+41 670 M
+(examining only as much of the input trees as is necessary to decide) s
+41 659 M
+(when two fringes are not the same:) s
+41 637 M
+(     \(define \(lazy-fringe subtree\)) s
+41 626 M
+(       \(cond \(\(pair? subtree\)) s
+41 615 M
+(              \(stream-append-deferred \(lazy-fringe \(car subtree\)\)) s
+41 604 M
+(                 \(lambda \(\) \(lazy-fringe \(cdr subtree\)\)\)\)\)) s
+41 593 M
+(             \(\(null? subtree\) the-empty-stream\)) s
+41 582 M
+(             \(else \(stream subtree\)\)\)\)) s
+41 560 M
+(     \(define \(lazy-same-fringe? tree1 tree2\)) s
+41 549 M
+(       \(let lp \(\(f1 \(lazy-fringe tree1\)\)) s
+41 538 M
+(                \(f2 \(lazy-fringe tree2\)\)\)) s
+41 527 M
+(         \(cond \(\(and \(stream-null? f1\) \(stream-null? f2\)\) #t\)) s
+41 516 M
+(               \(\(or  \(stream-null? f1\) \(stream-null? f2\)\) #f\)) s
+41 505 M
+(               \(\(eq? \(stream-car   f1\) \(stream-car   f2\)\)) s
+41 494 M
+(                \(lp  \(stream-cdr   f1\) \(stream-cdr   f2\)\)\)) s
+41 483 M
+(               \(else #f\)\)\)\)) s
+41 461 M
+(     \(define \(stream-append-deferred stream1 stream2-thunk\)) s
+41 450 M
+(       \(if \(stream-pair? stream1\)) s
+41 439 M
+(           \(cons-stream \(stream-car stream1\)) s
+41 428 M
+(                        \(stream-append-deferred \(stream-cdr stream1\)) s
+41 417 M
+(                                                stream2-thunk\)\)) s
+41 406 M
+(           \(stream2-thunk\)\)\)) s
+41 384 M
+(     \(define the-empty-stream \(stream\)\)) s
+41 362 M
+(     #|) s
+41 351 M
+(     \(lazy-same-fringe?) s
+41 340 M
+(      '\(\(a b\) c \(\(d\)\) e \(f \(\(g h\)\)\)\)) s
+41 329 M
+(      '\(a b c \(\(d\) \(\) e\) \(f \(g \(h\)\)\)\)\)) s
+41 318 M
+(     ;Value: #t) s
+41 296 M
+(     \(lazy-same-fringe?) s
+41 285 M
+(      '\(\(a b\) c \(\(d\)\) e \(f \(\(g h\)\)\)\)) s
+41 274 M
+(      '\(a b c \(\(d\) \(\) e\) \(g \(f \(h\)\)\)\)\)) s
+41 263 M
+(     ;Value: #f) s
+41 252 M
+(     |#) s
+41 230 M
+(-------------) s
+41 219 M
+(Problem 8.2:) s
+41 197 M
+(This implementation of fringe has the same problem of copying the) s
+41 186 M
+(stream that our original fringe program had copying the list.) s
+41 164 M
+(A. What would have gone wrong had we not thunkified the second argument) s
+41 153 M
+(   to be appended and instead just used the stream-append procedure:) s
+41 131 M
+(     \(define \(stream-append stream1 stream2\)) s
+41 120 M
+(       \(if \(stream-pair? stream1\)) s
+41 109 M
+(           \(cons-stream \(stream-car stream1\)) s
+41 98 M
+(                        \(stream-append \(stream-cdr stream1\) stream2\)\)) s
+41 87 M
+(           stream2\)\)) s
+41 65 M
+(B. Redefine lazy-fringe to be a stream-based program that eliminates this) s
+41 54 M
+(   re-copying while avoiding unnecessary subtree fringe generation, using) s
+41 43 M
+(   a technique similar to the "nicer" \(walk-based\) fringe above.) s
+41 32 M
+(   [Hint:  Consider the cons-stream special form with deferred cdr walk.]) s
+41 21 M
+(-------------) s
+_R
+S
+%%Page: (4) 4
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 4 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Tue Apr 08 18:28:32 2014) def
+/pagenumstr (4) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+41 681 M
+(An alternative incremental idea is to make coroutines that generate) s
+41 670 M
+(the fringes, using an explicit continuation argument and local state.) s
+41 648 M
+(Notice that in the following code we invent a special object *done*.) s
+41 637 M
+(Because it is a newly consed list, this object is eq? only to itself,) s
+41 626 M
+(so it cannot be confused with any other object.  This is a very common) s
+41 615 M
+(device for making unique objects.) s
+41 593 M
+(     \(define *done* \(list '*done*\)\)) s
+41 571 M
+(     \(define \(coroutine-fringe-generator tree\)) s
+41 560 M
+(       \(define \(resume-thunk\)) s
+41 549 M
+(         \(walk tree \(lambda \(\) *done*\)\)\)) s
+41 538 M
+(       \(define \(walk subtree continue\)) s
+41 527 M
+(         \(cond \(\(null? subtree\)) s
+41 516 M
+(                \(continue\)\)) s
+41 505 M
+(               \(\(pair? subtree\)) s
+41 494 M
+(                \(walk \(car subtree\)) s
+41 483 M
+(                      \(lambda \(\)) s
+41 472 M
+(                        \(walk \(cdr subtree\)) s
+41 461 M
+(                              continue\)\)\)\)) s
+41 450 M
+(               \(else) s
+41 439 M
+(                \(set! resume-thunk continue\)) s
+41 428 M
+(                subtree\)\)\)) s
+41 417 M
+(       \(lambda \(\) \(resume-thunk\)\)\)) s
+41 395 M
+(     \(define \(coroutine-same-fringe? tree1 tree2\)) s
+41 384 M
+(       \(let \(\(f1 \(coroutine-fringe-generator tree1\)\)) s
+41 373 M
+(             \(f2 \(coroutine-fringe-generator tree2\)\)\)) s
+41 362 M
+(         \(let lp \(\(x1 \(f1\)\) \(x2 \(f2\)\)\)) s
+41 351 M
+(           \(cond \(\(and \(eq? x1 *done*\) \(eq? x2 *done*\)\) #t\)) s
+41 340 M
+(                 \(\(or  \(eq? x1 *done*\) \(eq? x2 *done*\)\) #f\)) s
+41 329 M
+(                 \(\(eq? x1 x2\) \(lp \(f1\) \(f2\)\)\)) s
+41 318 M
+(                 \(else #f\)\)\)\)\)) s
+41 296 M
+(Also notice the peculiar SET! assignment in this code.  This makes it) s
+41 285 M
+(possible for the procedures f1 and f2 \(two distinct results of calling) s
+41 274 M
+(the fringe generator\) to maintain independent resume continuations) s
+41 263 M
+(each time they are re-invoked to proceed generating their fringes.) s
+41 252 M
+(This assignment is what gives each new fringe generator its own) s
+41 241 M
+(dynamic local state.) s
+41 219 M
+(     #|) s
+41 208 M
+(     \(coroutine-same-fringe?) s
+41 197 M
+(      '\(\(a b\) c \(\(d\)\) e \(f \(\(g h\)\)\)\)) s
+41 186 M
+(      '\(a b c \(\(d\) \(\) e\) \(f \(g \(h\)\)\)\)\)) s
+41 175 M
+(     ;Value: #t) s
+41 153 M
+(     \(coroutine-same-fringe?) s
+41 142 M
+(      '\(\(a b\) c \(\(d\)\) e \(f \(\(g h\)\)\)\)) s
+41 131 M
+(      '\(a b c \(\(d\) \(\) e\) \(g \(f \(h\)\)\)\)\)) s
+41 120 M
+(     ;Value: #f) s
+41 109 M
+(     |#) s
+41 87 M
+(-------------) s
+41 76 M
+(Problem 8.3:) s
+41 54 M
+(Why is it necessary to use the expression "\(lambda \(\) \(resume-thunk\)\)") s
+41 43 M
+(rather than just "resume-thunk" as the returned value of the fringe) s
+41 32 M
+(generator?  Aren't they the same, by the eta rule of lambda calculus?) s
+41 21 M
+(-------------) s
+_R
+S
+%%Page: (5) 5
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 5 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Tue Apr 08 18:28:32 2014) def
+/pagenumstr (5) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+41 681 M
+(Remember, the goal is to enumerate the fringes of the two trees so) s
+41 670 M
+(that the corresponding pairs of elements can be compared without) s
+41 659 M
+(generating all of the pairs of elements first.) s
+41 637 M
+(We can abstract this control structure, using underlying) s
+41 626 M
+(continuations.  Now things get very complicated.  This is a real brain) s
+41 615 M
+(teaser!  Here, a procedure that is to be used as a coroutine takes an) s
+41 604 M
+(argument: return.  Its value is a procedure that can be called to) s
+41 593 M
+(return a value from the coroutine.) s
+41 571 M
+(The coroutine-manager procedure make-coroutine takes todo, a procedure) s
+41 560 M
+(that describes the computation to be done.  Todo gets a return) s
+41 549 M
+(procedure that it can call to deliver an incremental result.  The) s
+41 538 M
+(coroutine-manager uses continuations to save the future of the todo,) s
+41 527 M
+(when it calls the return procedure, so that the todo can be resumed at) s
+41 516 M
+(the result of the return.) s
+41 494 M
+(\(define \(make-coroutine todo\)          ;todo=\(lambda \(return\) ...\)) s
+41 483 M
+(  \(let \(\(todo-future #f\)\)) s
+41 472 M
+(    \(lambda \(supplicant\)               ;supplicant=\(lambda \(value\) ...\)) s
+41 461 M
+(      \(let \(\(resume-point supplicant\)\)) s
+41 450 M
+(        \(define \(return value\)) s
+41 439 M
+(          \(set! resume-point           ;gets \(resume-point value\)) s
+41 428 M
+(                \(call-with-current-continuation) s
+41 417 M
+(                 \(lambda \(k\)) s
+41 406 M
+(                   \(set! todo-future k\)) s
+41 395 M
+(                   \(resume-point value\)\)\)\)\)) s
+41 384 M
+(        \(if todo-future                ;is there a saved future?) s
+41 373 M
+(            \(todo-future supplicant\)) s
+41 362 M
+(            \(todo return\)\)\)\)\)\)         ;initial call) s
+41 340 M
+(The next-value procedure creates a supplicant so that when the next) s
+41 329 M
+(value is obtained, the value is given to the supplicant.  It is) s
+41 318 M
+(amazing that we can use underlying Scheme continuations to provide the) s
+41 307 M
+(supplicants needed!) s
+41 285 M
+(\(define next-value) s
+41 274 M
+(  call-with-current-continuation\)) s
+41 252 M
+(We can try this out with simple lists first.  Here is an appropriate) s
+41 241 M
+(list iterator that will deliver an element of a list each time it is) s
+41 230 M
+(poked with next-value:) s
+41 208 M
+(\(define *done* \(list '*done*\)\)) s
+41 186 M
+(\(define \(done? x\) \(eq? x *done*\)\)) s
+41 164 M
+(\(define \(list-iterator list\)) s
+41 153 M
+(  \(make-coroutine ) s
+41 142 M
+(   \(lambda \(return\) ) s
+41 131 M
+(     \(for-each return list\)) s
+41 120 M
+(     \(return *done*\)\)\)\)) s
+_R
+S
+%%Page: (6) 6
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 6 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Tue Apr 08 18:28:32 2014) def
+/pagenumstr (6) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+41 681 M
+(It seems to work pretty well:) s
+41 670 M
+(#|) s
+41 659 M
+(\(let \(\(foo \(list-iterator '\(1 2 3\)\)\)\)) s
+41 648 M
+(  \(let lp \(\(v \(next-value foo\)\)\)) s
+41 637 M
+(    \(if \(not \(done? v\)\)) s
+41 626 M
+(        \(begin \(pp v\)) s
+41 615 M
+(               \(lp \(next-value foo\)\)\)) s
+41 604 M
+(        'done\)\)\)) s
+41 593 M
+(1) s
+41 582 M
+(2) s
+41 571 M
+(3) s
+41 560 M
+(;Value: done) s
+41 538 M
+(\(let \(\(foo \(list-iterator '\(1 2 3\)\)\)) s
+41 527 M
+(      \(bar \(list-iterator '\(a b c\)\)\)\)) s
+41 516 M
+(  \(let lp \(\(v \(next-value foo\)\)) s
+41 505 M
+(           \(w \(next-value bar\)\)\)) s
+41 494 M
+(    \(pp \(list v w\)\)) s
+41 483 M
+(    \(if \(and \(not \(done? v\)\) \(not \(done? w\)\)\)) s
+41 472 M
+(        \(lp \(next-value foo\)) s
+41 461 M
+(            \(next-value bar\)\)) s
+41 450 M
+(        'done\)\)\)) s
+41 439 M
+(\(1 a\)) s
+41 428 M
+(\(2 b\)) s
+41 417 M
+(\(3 c\)) s
+41 406 M
+(\(\(*done*\) \(*done*\)\)) s
+41 395 M
+(;Value: done) s
+41 384 M
+(|#) s
+41 362 M
+(-------------) s
+41 351 M
+(Problem 8.4:) s
+41 329 M
+(Unfortunately, the program fails in a strange way if we do not return) s
+41 318 M
+(*done* using \(return *done*\).  Indeed, if we erroneously write) s
+41 296 M
+(\(define \(list-iterator list\)) s
+41 285 M
+(  \(make-coroutine ) s
+41 274 M
+(   \(lambda \(return\)) s
+41 263 M
+(     \(for-each return list\)) s
+41 252 M
+(     *done*\)\)\)) s
+41 230 M
+(we will get the following strange behavior:) s
+41 208 M
+(\(let \(\(foo \(list-iterator '\(1 2 3\)\)\)) s
+41 197 M
+(      \(bar \(list-iterator '\(a b c\)\)\)\)) s
+41 186 M
+(  \(let lp \(\(v \(next-value foo\)\) \(w \(next-value bar\)\)\)) s
+41 175 M
+(    \(pp \(list v w\)\)) s
+41 164 M
+(    \(if \(and \(not \(done? v\)\) \(not \(done? w\)\)\)) s
+41 153 M
+(        \(lp \(next-value foo\) \(next-value bar\)\)) s
+41 142 M
+(        'done\)\)\)) s
+41 131 M
+(\(1 a\)) s
+41 120 M
+(\(2 b\)) s
+41 109 M
+(\(3 c\)) s
+41 98 M
+(\(\(*done*\) a\)) s
+41 87 M
+(;Value: done) s
+41 65 M
+(Figure this out.  How do we get an asymmetric result here?  Where did) s
+41 54 M
+(the "a" come from?  Write an explanation of this weird behavior.) s
+41 43 M
+(-------------) s
+_R
+S
+%%Page: (7) 7
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 7 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Tue Apr 08 18:28:32 2014) def
+/pagenumstr (7) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+41 681 M
+(With this abstraction, we can make a fringe generator producer and) s
+41 670 M
+(fringe comparator consumer rather elegantly:) s
+41 648 M
+(\(define \(fringe-generator tree\)) s
+41 637 M
+(  \(make-coroutine) s
+41 626 M
+(   \(lambda \(return\)) s
+41 615 M
+(     \(define \(walk subtree\)) s
+41 604 M
+(       \(cond \(\(pair? subtree\)) s
+41 593 M
+(              \(walk \(car subtree\)\)) s
+41 582 M
+(              \(walk \(cdr subtree\)\)\)) s
+41 571 M
+(             \(\(null? subtree\) 'goop\)) s
+41 560 M
+(             \(else \(return subtree\)\)\)\)) s
+41 549 M
+(     \(walk tree\)) s
+41 538 M
+(     \(return *done*\)\)\)\)) s
+41 516 M
+(\(define \(same-fringe? tree1 tree2\)) s
+41 505 M
+(  \(let \(\(f1 \(fringe-generator tree1\)\)) s
+41 494 M
+(        \(f2 \(fringe-generator tree2\)\)\)) s
+41 483 M
+(    \(let lp \(\(x1 \(next-value f1\)\)) s
+41 472 M
+(             \(x2 \(next-value f2\)\)\)) s
+41 461 M
+(      ;; \(pp \(list x1 x2\)\)) s
+41 450 M
+(      \(cond \(\(and \(done? x1\) \(done? x2\)\)) s
+41 439 M
+(             #t\)) s
+41 428 M
+(            \(\(or \(done? x1\) \(done? x2\)\)) s
+41 417 M
+(             #f\)) s
+41 406 M
+(            \(\(eq? x1 x2\)) s
+41 395 M
+(             \(lp \(next-value f1\)) s
+41 384 M
+(                 \(next-value f2\)\)\)) s
+41 373 M
+(            \(else #f\)\)\)\)\)) s
+41 351 M
+(#|) s
+41 340 M
+(\(same-fringe?) s
+41 329 M
+( '\(\(a b\) c \(\(d\)\) e \(f \(\(g h\)\)\)\)) s
+41 318 M
+( '\(a b c \(\(d\) \(\) e\) \(f \(g \(h\)\)\)\)\)) s
+41 307 M
+(;Value: #t) s
+41 285 M
+(\(same-fringe?) s
+41 274 M
+( '\(\(a b\) c \(\(d\)\) e \(f \(\(g h\)\)\)\)) s
+41 263 M
+( '\(a b c \(\(d\) \(\) e\) \(g \(f \(h\)\)\)\)\)) s
+41 252 M
+(;Value: #f) s
+41 230 M
+(\(same-fringe?) s
+41 219 M
+( '\(\(a b\) c \(\(d\)\) e \(f \(\(g h\)\)\)\)) s
+41 208 M
+( '\(a b c \(\(d\) \(\) e\) \(g \(f \)\)\)\)) s
+41 197 M
+(;Value: #f) s
+41 186 M
+(|#) s
+_R
+S
+%%Page: (8) 8
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 8 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Tue Apr 08 18:28:32 2014) def
+/pagenumstr (8) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+41 681 M
+(                     Communication among Threads) s
+41 659 M
+(Now that we are all warmed up about continuations, you are ready to) s
+41 648 M
+(look at the time-sharing thread code in "conspire.scm", and the) s
+41 637 M
+(parallel execution code in "try-two-ways.scm".  The time-sharing) s
+41 626 M
+(monitor can easily implement coroutines.  You have an example with an) s
+41 615 M
+(explicit thread-yield in the first simple example in "conspire.scm".) s
+41 604 M
+(The return procedure above can be thought of as a thread yield.) s
+41 593 M
+(However, the coroutines in the time-shared environment do not easily) s
+41 582 M
+(communicate except through shared variables.) s
+41 560 M
+(Time-sharing systems, such as GNU/Linux, provide explicit mechanisms,) s
+41 549 M
+(such as pipes, to make it easy for processes to communicate.  A pipe is) s
+41 538 M
+(basically a FIFO communication channel which provides a reader and a) s
+41 527 M
+(writer.  The writer puts things into the pipe and the reader takes) s
+41 516 M
+(them out.  If we had pipes in conspire we could write the same-fringe?) s
+41 505 M
+(program as follows:) s
+41 483 M
+(     \(define *done* \(list '*done*\)\)) s
+41 461 M
+(     \(define \(piped-same-fringe? tree1 tree2\)) s
+41 450 M
+(       \(let \(\(p1 \(make-pipe\)\) \(p2 \(make-pipe\)\)\)) s
+41 439 M
+(         \(let \(\(thread1) s
+41 428 M
+(                \(conspire:make-thread) s
+41 417 M
+(                 conspire:runnable) s
+41 406 M
+(                 \(lambda \(\)) s
+41 395 M
+(                   \(piped-fringe-generator tree1 \(pipe-writer p1\)\)\)\)\)) s
+41 384 M
+(               \(thread2) s
+41 373 M
+(                \(conspire:make-thread) s
+41 362 M
+(                 conspire:runnable) s
+41 351 M
+(                 \(lambda \(\)) s
+41 340 M
+(                   \(piped-fringe-generator tree2 \(pipe-writer p2\)\)\)\)\)) s
+41 329 M
+(               \(f1 \(pipe-reader p1\)\)) s
+41 318 M
+(               \(f2 \(pipe-reader p2\)\)\)) s
+41 307 M
+(           \(let lp \(\(x1 \(f1\)\) \(x2 \(f2\)\)\)) s
+41 296 M
+(             \(cond \(\(and \(eq? x1 *done*\) \(eq? x2 *done*\)\) #t\)) s
+41 285 M
+(                   \(\(or  \(eq? x1 *done*\) \(eq? x2 *done*\)\) #f\)) s
+41 274 M
+(                   \(\(eq? x1 x2\) \(lp \(f1\) \(f2\)\)\)) s
+41 263 M
+(                   \(else #f\)\)\)\)\)\)) s
+41 241 M
+(     \(define \(piped-fringe-generator tree return\)) s
+41 230 M
+(       \(define \(lp tree\)) s
+41 219 M
+(         \(cond \(\(pair? tree\)) s
+41 208 M
+(                \(lp \(car tree\)\)) s
+41 197 M
+(                \(lp \(cdr tree\)\)\)) s
+41 186 M
+(               \(\(null? tree\) unspecific\)) s
+41 175 M
+(               \(else \(return tree\)\)\)\)) s
+41 164 M
+(       \(lp tree\)) s
+41 153 M
+(       \(return *done*\)\)) s
+41 131 M
+(-------------) s
+41 120 M
+(Problem 8.5:) s
+41 98 M
+(Implement the pipe mechanism implied by the program above.  It should) s
+41 87 M
+(work under the conspire time-sharing monitor.  Remember, if the pipe) s
+41 76 M
+(is empty a reader must wait until something is available to be read.) s
+41 65 M
+(Also, since this is supposed to work under preemptive time sharing,) s
+41 54 M
+(the pipe must be correctly interlocked.) s
+41 43 M
+(*****GJS:**** Say something about interrupt holes, for example) s
+41 32 M
+(between a test and use of the result.  \(fix is double-checked locks\)) s
+41 21 M
+(-------------) s
+_R
+S
+%%Page: (9) 9
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 9 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Tue Apr 08 18:28:32 2014) def
+/pagenumstr (9) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+41 681 M
+(With appropriate abstraction we can make the program look almost) s
+41 670 M
+(exactly the same as the coroutine version:) s
+41 648 M
+(     \(define *done* \(list '*done*\)\)) s
+41 626 M
+(     \(define \(tf-piped-same-fringe? tree1 tree2\)) s
+41 615 M
+(       \(let \(\(f1 \(make-threaded-filter \(tf-piped-fringe-generator tree1\)\)\)) s
+41 604 M
+(             \(f2 \(make-threaded-filter \(tf-piped-fringe-generator tree2\)\)\)\)) s
+41 593 M
+(         \(let lp \(\(x1 \(f1\)\) \(x2 \(f2\)\)\)) s
+41 582 M
+(           \(cond \(\(and \(eq? x1 *done*\) \(eq? x2 *done*\)\) #t\)) s
+41 571 M
+(                 \(\(or  \(eq? x1 *done*\) \(eq? x2 *done*\)\) #f\)) s
+41 560 M
+(                 \(\(eq? x1 x2\) \(lp \(f1\) \(f2\)\)\)) s
+41 549 M
+(                 \(else #f\)\)\)\)\)) s
+41 527 M
+(     \(define \(tf-piped-fringe-generator tree\)) s
+41 516 M
+(       \(lambda \(return\)) s
+41 505 M
+(         \(define \(lp tree\)) s
+41 494 M
+(           \(cond \(\(pair? tree\)) s
+41 483 M
+(                  \(lp \(car tree\)\)) s
+41 472 M
+(                  \(lp \(cdr tree\)\)\)) s
+41 461 M
+(                 \(\(null? tree\) unspecific\)) s
+41 450 M
+(                 \(else) s
+41 439 M
+(                  \(return tree\)\)\)\)) s
+41 428 M
+(         \(lp tree\)) s
+41 417 M
+(         \(return *done*\)\)\)) s
+41 395 M
+(     #|) s
+41 384 M
+(     \(with-time-sharing-conspiracy) s
+41 373 M
+(      \(lambda \(\)) s
+41 362 M
+(        \(tf-piped-same-fringe?) s
+41 351 M
+(         '\(\(a b\) c \(\(d\)\) e \(f \(\(g h\)\)\)\)) s
+41 340 M
+(         '\(a b c \(\(d\) \(\) e\) \(f \(g \(h\)\)\)\)\)) s
+41 329 M
+(        \)\)) s
+41 318 M
+(     ;Value: #t) s
+41 296 M
+(     \(with-time-sharing-conspiracy) s
+41 285 M
+(      \(lambda \(\)) s
+41 274 M
+(        \(tf-piped-same-fringe?) s
+41 263 M
+(         '\(\(a b\) c \(\(d\)\) e \(f \(\(g h\)\)\)\)) s
+41 252 M
+(         '\(a b c \(\(d\) \(\) e\) \(g \(f \(h\)\)\)\)\)) s
+41 241 M
+(        \)\)) s
+41 230 M
+(     ;Value: #f) s
+41 208 M
+(     \(with-time-sharing-conspiracy) s
+41 197 M
+(      \(lambda \(\)) s
+41 186 M
+(        \(tf-piped-same-fringe?) s
+41 175 M
+(         '\(\(a b\) c \(\(d\)\) e \(f \(\(g h\)\)\)\)) s
+41 164 M
+(         '\(a b c \(\(d\) \(\) e\) \(g \(f \)\)\)\)) s
+41 153 M
+(        \)\)) s
+41 142 M
+(     ;Value: #f) s
+41 131 M
+(     |#) s
+41 109 M
+(-------------) s
+41 98 M
+(Problem 8.6:) s
+41 76 M
+(Write make-threaded-filter to implement this interface.  Demonstrate) s
+41 65 M
+(your program.) s
+41 54 M
+(-------------) s
+_R
+S
+%%Trailer
+%%Pages: 9
+%%DocumentNeededResources: font Courier-Bold Courier 
+%%EOF
