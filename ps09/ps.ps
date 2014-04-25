@@ -1,0 +1,1638 @@
+%!PS-Adobe-3.0
+%%BoundingBox: 18 36 594 756
+%%Title: letter
+%%Creator: GNU Enscript 1.6.5.2
+%%CreationDate: Wed Apr 16 14:43:55 2014
+%%Orientation: Portrait
+%%Pages: (atend)
+%%DocumentMedia: Letter 612 792 0 () ()
+%%DocumentNeededResources: (atend)
+%%EndComments
+%%BeginProlog
+%%BeginResource: procset Enscript-Prolog 1.6.5 2
+%
+% Procedures.
+%
+
+/_S {	% save current state
+  /_s save def
+} def
+/_R {	% restore from saved state
+  _s restore
+} def
+
+/S {	% showpage protecting gstate
+  gsave
+  showpage
+  grestore
+} bind def
+
+/MF {	% fontname newfontname -> -	make a new encoded font
+  /newfontname exch def
+  /fontname exch def
+
+  /fontdict fontname findfont def
+  /newfont fontdict maxlength dict def
+
+  fontdict {
+    exch
+    dup /FID eq {
+      % skip FID pair
+      pop pop
+    } {
+      % copy to the new font dictionary
+      exch newfont 3 1 roll put
+    } ifelse
+  } forall
+
+  newfont /FontName newfontname put
+
+  % insert only valid encoding vectors
+  encoding_vector length 256 eq {
+    newfont /Encoding encoding_vector put
+  } if
+
+  newfontname newfont definefont pop
+} def
+
+/MF_PS { % fontname newfontname -> -	make a new font preserving its enc
+  /newfontname exch def
+  /fontname exch def
+
+  /fontdict fontname findfont def
+  /newfont fontdict maxlength dict def
+
+  fontdict {
+    exch
+    dup /FID eq {
+      % skip FID pair
+      pop pop
+    } {
+      % copy to the new font dictionary
+      exch newfont 3 1 roll put
+    } ifelse
+  } forall
+
+  newfont /FontName newfontname put
+
+  newfontname newfont definefont pop
+} def
+
+/SF { % fontname width height -> -	set a new font
+  /height exch def
+  /width exch def
+
+  findfont
+  [width 0 0 height 0 0] makefont setfont
+} def
+
+/SUF { % fontname width height -> -	set a new user font
+  /height exch def
+  /width exch def
+
+  /F-gs-user-font MF
+  /F-gs-user-font width height SF
+} def
+
+/SUF_PS { % fontname width height -> -	set a new user font preserving its enc
+  /height exch def
+  /width exch def
+
+  /F-gs-user-font MF_PS
+  /F-gs-user-font width height SF
+} def
+
+/M {moveto} bind def
+/s {show} bind def
+
+/Box {	% x y w h -> -			define box path
+  /d_h exch def /d_w exch def /d_y exch def /d_x exch def
+  d_x d_y  moveto
+  d_w 0 rlineto
+  0 d_h rlineto
+  d_w neg 0 rlineto
+  closepath
+} def
+
+/bgs {	% x y height blskip gray str -> -	show string with bg color
+  /str exch def
+  /gray exch def
+  /blskip exch def
+  /height exch def
+  /y exch def
+  /x exch def
+
+  gsave
+    x y blskip sub str stringwidth pop height Box
+    gray setgray
+    fill
+  grestore
+  x y M str s
+} def
+
+/bgcs { % x y height blskip red green blue str -> -  show string with bg color
+  /str exch def
+  /blue exch def
+  /green exch def
+  /red exch def
+  /blskip exch def
+  /height exch def
+  /y exch def
+  /x exch def
+
+  gsave
+    x y blskip sub str stringwidth pop height Box
+    red green blue setrgbcolor
+    fill
+  grestore
+  x y M str s
+} def
+
+% Highlight bars.
+/highlight_bars {	% nlines lineheight output_y_margin gray -> -
+  gsave
+    setgray
+    /ymarg exch def
+    /lineheight exch def
+    /nlines exch def
+
+    % This 2 is just a magic number to sync highlight lines to text.
+    0 d_header_y ymarg sub 2 sub translate
+
+    /cw d_output_w cols div def
+    /nrows d_output_h ymarg 2 mul sub lineheight div cvi def
+
+    % for each column
+    0 1 cols 1 sub {
+      cw mul /xp exch def
+
+      % for each rows
+      0 1 nrows 1 sub {
+        /rn exch def
+        rn lineheight mul neg /yp exch def
+        rn nlines idiv 2 mod 0 eq {
+	  % Draw highlight bar.  4 is just a magic indentation.
+	  xp 4 add yp cw 8 sub lineheight neg Box fill
+	} if
+      } for
+    } for
+
+  grestore
+} def
+
+% Line highlight bar.
+/line_highlight {	% x y width height gray -> -
+  gsave
+    /gray exch def
+    Box gray setgray fill
+  grestore
+} def
+
+% Column separator lines.
+/column_lines {
+  gsave
+    .1 setlinewidth
+    0 d_footer_h translate
+    /cw d_output_w cols div def
+    1 1 cols 1 sub {
+      cw mul 0 moveto
+      0 d_output_h rlineto stroke
+    } for
+  grestore
+} def
+
+% Column borders.
+/column_borders {
+  gsave
+    .1 setlinewidth
+    0 d_footer_h moveto
+    0 d_output_h rlineto
+    d_output_w 0 rlineto
+    0 d_output_h neg rlineto
+    closepath stroke
+  grestore
+} def
+
+% Do the actual underlay drawing
+/draw_underlay {
+  ul_style 0 eq {
+    ul_str true charpath stroke
+  } {
+    ul_str show
+  } ifelse
+} def
+
+% Underlay
+/underlay {	% - -> -
+  gsave
+    0 d_page_h translate
+    d_page_h neg d_page_w atan rotate
+
+    ul_gray setgray
+    ul_font setfont
+    /dw d_page_h dup mul d_page_w dup mul add sqrt def
+    ul_str stringwidth pop dw exch sub 2 div ul_h_ptsize -2 div moveto
+    draw_underlay
+  grestore
+} def
+
+/user_underlay {	% - -> -
+  gsave
+    ul_x ul_y translate
+    ul_angle rotate
+    ul_gray setgray
+    ul_font setfont
+    0 0 ul_h_ptsize 2 div sub moveto
+    draw_underlay
+  grestore
+} def
+
+% Page prefeed
+/page_prefeed {		% bool -> -
+  statusdict /prefeed known {
+    statusdict exch /prefeed exch put
+  } {
+    pop
+  } ifelse
+} def
+
+% Wrapped line markers
+/wrapped_line_mark {	% x y charwith charheight type -> -
+  /type exch def
+  /h exch def
+  /w exch def
+  /y exch def
+  /x exch def
+
+  type 2 eq {
+    % Black boxes (like TeX does)
+    gsave
+      0 setlinewidth
+      x w 4 div add y M
+      0 h rlineto w 2 div 0 rlineto 0 h neg rlineto
+      closepath fill
+    grestore
+  } {
+    type 3 eq {
+      % Small arrows
+      gsave
+        .2 setlinewidth
+        x w 2 div add y h 2 div add M
+        w 4 div 0 rlineto
+        x w 4 div add y lineto stroke
+
+        x w 4 div add w 8 div add y h 4 div add M
+        x w 4 div add y lineto
+	w 4 div h 8 div rlineto stroke
+      grestore
+    } {
+      % do nothing
+    } ifelse
+  } ifelse
+} def
+
+% EPSF import.
+
+/BeginEPSF {
+  /b4_Inc_state save def    		% Save state for cleanup
+  /dict_count countdictstack def	% Count objects on dict stack
+  /op_count count 1 sub def		% Count objects on operand stack
+  userdict begin
+  /showpage { } def
+  0 setgray 0 setlinecap
+  1 setlinewidth 0 setlinejoin
+  10 setmiterlimit [ ] 0 setdash newpath
+  /languagelevel where {
+    pop languagelevel
+    1 ne {
+      false setstrokeadjust false setoverprint
+    } if
+  } if
+} bind def
+
+/EndEPSF {
+  count op_count sub { pos } repeat	% Clean up stacks
+  countdictstack dict_count sub { end } repeat
+  b4_Inc_state restore
+} bind def
+
+% Check PostScript language level.
+/languagelevel where {
+  pop /gs_languagelevel languagelevel def
+} {
+  /gs_languagelevel 1 def
+} ifelse
+%%EndResource
+%%BeginResource: procset Enscript-Encoding-88591 1.6.5 2
+/encoding_vector [
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/space        	/exclam       	/quotedbl     	/numbersign   	
+/dollar       	/percent      	/ampersand    	/quoteright   	
+/parenleft    	/parenright   	/asterisk     	/plus         	
+/comma        	/hyphen       	/period       	/slash        	
+/zero         	/one          	/two          	/three        	
+/four         	/five         	/six          	/seven        	
+/eight        	/nine         	/colon        	/semicolon    	
+/less         	/equal        	/greater      	/question     	
+/at           	/A            	/B            	/C            	
+/D            	/E            	/F            	/G            	
+/H            	/I            	/J            	/K            	
+/L            	/M            	/N            	/O            	
+/P            	/Q            	/R            	/S            	
+/T            	/U            	/V            	/W            	
+/X            	/Y            	/Z            	/bracketleft  	
+/backslash    	/bracketright 	/asciicircum  	/underscore   	
+/quoteleft    	/a            	/b            	/c            	
+/d            	/e            	/f            	/g            	
+/h            	/i            	/j            	/k            	
+/l            	/m            	/n            	/o            	
+/p            	/q            	/r            	/s            	
+/t            	/u            	/v            	/w            	
+/x            	/y            	/z            	/braceleft    	
+/bar          	/braceright   	/tilde        	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/.notdef      	/.notdef      	/.notdef      	/.notdef      	
+/space        	/exclamdown   	/cent         	/sterling     	
+/currency     	/yen          	/brokenbar    	/section      	
+/dieresis     	/copyright    	/ordfeminine  	/guillemotleft	
+/logicalnot   	/hyphen       	/registered   	/macron       	
+/degree       	/plusminus    	/twosuperior  	/threesuperior	
+/acute        	/mu           	/paragraph    	/bullet       	
+/cedilla      	/onesuperior  	/ordmasculine 	/guillemotright	
+/onequarter   	/onehalf      	/threequarters	/questiondown 	
+/Agrave       	/Aacute       	/Acircumflex  	/Atilde       	
+/Adieresis    	/Aring        	/AE           	/Ccedilla     	
+/Egrave       	/Eacute       	/Ecircumflex  	/Edieresis    	
+/Igrave       	/Iacute       	/Icircumflex  	/Idieresis    	
+/Eth          	/Ntilde       	/Ograve       	/Oacute       	
+/Ocircumflex  	/Otilde       	/Odieresis    	/multiply     	
+/Oslash       	/Ugrave       	/Uacute       	/Ucircumflex  	
+/Udieresis    	/Yacute       	/Thorn        	/germandbls   	
+/agrave       	/aacute       	/acircumflex  	/atilde       	
+/adieresis    	/aring        	/ae           	/ccedilla     	
+/egrave       	/eacute       	/ecircumflex  	/edieresis    	
+/igrave       	/iacute       	/icircumflex  	/idieresis    	
+/eth          	/ntilde       	/ograve       	/oacute       	
+/ocircumflex  	/otilde       	/odieresis    	/divide       	
+/oslash       	/ugrave       	/uacute       	/ucircumflex  	
+/udieresis    	/yacute       	/thorn        	/ydieresis    	
+] def
+%%EndResource
+%%EndProlog
+%%BeginSetup
+%%IncludeResource: font Courier-Bold
+%%IncludeResource: font Courier
+/HFpt_w 10 def
+/HFpt_h 10 def
+/Courier /HF-gs-font MF
+/HF /HF-gs-font findfont [HFpt_w 0 0 HFpt_h 0 0] makefont def
+/Courier-Bold /F-gs-font MF
+/F-gs-font 13 13 SF
+/#copies 1 def
+% Pagedevice definitions:
+gs_languagelevel 1 gt {
+  <<
+    /PageSize [612 792] 
+  >> setpagedevice
+} if
+%%BeginResource: procset Enscript-Header-simple 1.6.5 2
+
+/do_header {	% print default simple header
+  gsave
+    d_header_x d_header_y HFpt_h 3 div add translate
+
+    HF setfont
+    user_header_p {
+      5 0 moveto user_header_left_str show
+
+      d_header_w user_header_center_str stringwidth pop sub 2 div
+      0 moveto user_header_center_str show
+
+      d_header_w user_header_right_str stringwidth pop sub 5 sub
+      0 moveto user_header_right_str show
+    } {
+      5 0 moveto fname show
+      45 0 rmoveto fmodstr show
+      45 0 rmoveto pagenumstr show
+    } ifelse
+
+  grestore
+} def
+%%EndResource
+/d_page_w 576 def
+/d_page_h 720 def
+/d_header_x 0 def
+/d_header_y 705 def
+/d_header_w 576 def
+/d_header_h 15 def
+/d_footer_x 0 def
+/d_footer_y 0 def
+/d_footer_w 576 def
+/d_footer_h 0 def
+/d_output_w 576 def
+/d_output_h 705 def
+/cols 1 def
+%%EndSetup
+%%Page: (1) 1
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 1 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Wed Apr 16 14:43:23 2014) def
+/pagenumstr (1) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+12.8 689 M
+(                MASSACHVSETTS INSTITVTE OF TECHNOLOGY) s
+12.8 675 M
+(      Department of Electrical Engineering and Computer Science) s
+12.8 647 M
+(                          6.945 Spring 2014) s
+12.8 633 M
+(                            Problem Set 9) s
+12.8 605 M
+(  Issued: Wed. 16 April 2014                 Due: Wed. 30 April 2014) s
+12.8 563 M
+(Note: This is the last problem set for this term.  You now have a term) s
+12.8 549 M
+(      project to work on.  Also, this problem set is optional for) s
+12.8 535 M
+(      students enrolled in 6.S081.) s
+12.8 507 M
+(Readings:) s
+12.8 479 M
+(  Online MIT/GNU Scheme Documentation,) s
+12.8 465 M
+(     Section  2.3: Dynamic Binding - fluid-let) s
+12.8 451 M
+(     Section 12.4: Continuations   - call-with-current-continuation) s
+12.8 423 M
+(  Here is a nice paper about continuations and threads:) s
+12.8 409 M
+(      http://repository.readscheme.org/ftp/papers/sw2003/Threads.pdf) s
+12.8 381 M
+(  In fact, there is an entire bibliography of stuff about this on:) s
+12.8 367 M
+(      http://library.readscheme.org/page6.html) s
+12.8 339 M
+(Code: load.scm ghelper.scm utils.scm time-share.scm schedule.scm ) s
+12.8 325 M
+(      syntax.scm rtdata.scm interp-actor.scm repl.scm) s
+12.8 283 M
+(                    The Actor Model of Concurrency) s
+12.8 255 M
+(We have examined traditional time-sharing, and the propagator system) s
+12.8 241 M
+(we have played with is one way to think about multiple computing) s
+12.8 227 M
+(agents acting in parallel: each propagator can be thought of as an) s
+12.8 213 M
+(independent computing agent.  But we didn't actually implement the) s
+12.8 199 M
+(propagator system so that it could work in parallel.  To make that) s
+12.8 185 M
+(work we would have to arrange that cells could serialize update) s
+12.8 171 M
+(requests so that they would not suffer from reader-writer problems.) s
+12.8 157 M
+(Also, the propagator system, as implemented, manipulates worldviews by) s
+12.8 143 M
+(global side-effects on the status of premises.  In a concurrent system) s
+12.8 129 M
+(it would be appropriate for the worldview to be represented separately) s
+12.8 115 M
+(for each query process.  Rebuilding the propagator system to work well) s
+12.8 101 M
+(concurrently is an excellent project, but here we go down another path) s
+12.8 87 M
+(for concurrency.) s
+12.8 59 M
+(In 1973 Carl Hewitt came up with an idea for formulating concurrency,) s
+12.8 45 M
+(based on message passing, called "actors."  \(Yes, that is the same) s
+12.8 31 M
+(Carl Hewitt who had the idea of match combinators.\)  Very crudely,) s
+12.8 17 M
+(Hewitt's idea is that when you call an actor \(send it a message\) the) s
+_R
+S
+%%Page: (2) 2
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 2 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Wed Apr 16 14:43:23 2014) def
+/pagenumstr (2) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+12.8 675 M
+(call immediately returns to the caller, but the message is put on a) s
+12.8 661 M
+(queue of work for the actor to do.  Each actor processes the elements) s
+12.8 647 M
+(of its input queue, perhaps changing its local state as it does so.) s
+12.8 633 M
+(In Hewitt's actors the state update is accomplished by the actor) s
+12.8 619 M
+("replacing itself" with a new behavior.  If the intention of the) s
+12.8 605 M
+(caller was to receive a reply it would have to pass its return) s
+12.8 591 M
+(continuation as an argument to the called actor as part of its calling) s
+12.8 577 M
+(message.) s
+12.8 549 M
+(In Hewitt's ideal system there were no computational objects that were) s
+12.8 535 M
+(not actors, including integers.  So to add "2" to "3" you send an) s
+12.8 521 M
+("add" message with a return address to "2".  You then receive a) s
+12.8 507 M
+(2-adder to which you send a "3" and a return address which will) s
+12.8 493 M
+(receive "5".  This made a very elegant object-oriented system, where) s
+12.8 479 M
+(everything was implemented by message passing.  See the article) s
+12.8 465 M
+(http://en.wikipedia.org/wiki/Actor_model for more information.) s
+12.8 437 M
+(Here I will be less orthodox and consider an actor-inspired system) s
+12.8 423 M
+(that adds an actor-like procedure to an ordinary Scheme-like lambda-) s
+12.8 409 M
+(calculus interpreter.  This is more to my \(GJS\) liking, because it) s
+12.8 395 M
+(does not require everything to be an actor -- I hate grand theories) s
+12.8 381 M
+(and magic bullets that restrict a programmer to do things by someone's) s
+12.8 367 M
+(grand theory.  The languages Erlang and Scala both provide mechanisms) s
+12.8 353 M
+(to support actor-like behaviors.) s
+12.8 325 M
+(So, let's get into it.  We provide an embedded actor interpreter) s
+12.8 311 M
+(system -- you can load it with \(load "load"\).  We initialize) s
+12.8 297 M
+(this interpreter with \(init\) and if we get an error, we can reenter it) s
+12.8 283 M
+(with \(go\).  It provides the prompt "eval>".  ) s
+12.8 255 M
+(This actor simulator is a work in progress.  THERE ARE BUGS!  However) s
+12.8 241 M
+(there is much that we can learn from this system.) s
+12.8 213 M
+(In this system we can run ordinary programs in the usual way:) s
+12.8 185 M
+(     eval> \(define fib) s
+12.8 171 M
+(             \(lambda \(n\)) s
+12.8 157 M
+(               \(if \(< n 2\)) s
+12.8 143 M
+(                   n) s
+12.8 129 M
+(                   \(+ \(fib \(- n 1\)\)) s
+12.8 115 M
+(                      \(fib \(- n 2\)\)\)\)\)\)) s
+12.8 87 M
+(     eval> \(fib 10\)) s
+12.8 73 M
+(     55) s
+_R
+S
+%%Page: (3) 3
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 3 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Wed Apr 16 14:43:23 2014) def
+/pagenumstr (3) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+12.8 675 M
+(But we can also define the Fibonacci computer in terms of actors,) s
+12.8 661 M
+(using "alpha expressions" rather than "lambda expressions":) s
+12.8 633 M
+(     eval> \(define fib) s
+12.8 619 M
+(             \(alpha \(n c\)) s
+12.8 605 M
+(               \(if \(< n 2\)) s
+12.8 591 M
+(                   \(c n\)) s
+12.8 577 M
+(                   \(let \(\(x 'not-ready\) \(y 'not-ready\)\)) s
+12.8 563 M
+(                     \(define wait-for-xy) s
+12.8 549 M
+(                       \(alpha \(k\)) s
+12.8 535 M
+(                              \(if \(boolean/or) s
+12.8 521 M
+(                                   \(eq? x 'not-ready\)) s
+12.8 507 M
+(                                   \(eq? y 'not-ready\)\)) s
+12.8 493 M
+(                                  \(wait-for-xy k\)) s
+12.8 479 M
+(                                  \(k #t\)\)\)\)) s
+12.8 465 M
+(                     \(fib \(- n 1\)) s
+12.8 451 M
+(                          \(lambda \(v\) \(set! x v\)\)\)) s
+12.8 437 M
+(                     \(fib \(- n 2\)) s
+12.8 423 M
+(                          \(lambda \(v\) \(set! y v\)\)\)) s
+12.8 409 M
+(                     \(wait-for-xy) s
+12.8 395 M
+(                      \(lambda \(ignore\) \(c \(+ x y\)\)\)\)\)\)\)\)) s
+12.8 367 M
+(     eval> \(fib 10 write-line\)) s
+12.8 353 M
+(     55) s
+12.8 339 M
+(     done) s
+12.8 311 M
+(Here fib is an actor that takes a number and a continuation to call) s
+12.8 297 M
+(with the value.  If the number is not less than 2 it sets up two state) s
+12.8 283 M
+(variables, x and y, to capture the values of the recursive calls.  It) s
+12.8 269 M
+(also defines an actor procedure that busy-waits until x and y are) s
+12.8 255 M
+(available.  The continuations of the recursive calls are just) s
+12.8 241 M
+(assignments to the capture variables.  In cases where we don't want) s
+12.8 227 M
+(to start a concurrent process, we use lambda rather than alpha.) s
+12.8 185 M
+(                            Implementation) s
+12.8 157 M
+(We will start with a simple interpreter to build an experimental actor) s
+12.8 143 M
+(system.  The changes to the interpreter system are quite minimal.) s
+12.8 129 M
+(First, we add a special-form syntax for alpha expressions:) s
+12.8 101 M
+(  \(define \(alpha? exp\) \(tagged-list? exp 'alpha\)\)) s
+12.8 73 M
+(  \(define \(alpha-parameters alpha-exp\) \(cadr alpha-exp\)\)) s
+12.8 45 M
+(  \(define \(alpha-body alpha-exp\)) s
+12.8 31 M
+(    \(let \(\(full-body \(cddr alpha-exp\)\)\)) s
+12.8 17 M
+(      \(sequence->begin full-body\)\)\)) s
+_R
+S
+%%Page: (4) 4
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 4 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Wed Apr 16 14:43:23 2014) def
+/pagenumstr (4) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+12.8 675 M
+(We did not change or add to the syntax for definitions, so expressions) s
+12.8 661 M
+(of the form) s
+12.8 633 M
+(  \(define \(foo x y\) <body>\) ) s
+12.8 605 M
+(define ordinary compound procedures with lambda.  Perhaps we should) s
+12.8 591 M
+(have a defactor?) s
+12.8 563 M
+(Since eval is defined as generic we need to produce a dispatch for) s
+12.8 549 M
+(alpha expressions that makes an actor procedure, analogous to a) s
+12.8 535 M
+(lambda-specified procedure:) s
+12.8 507 M
+(  \(defhandler eval) s
+12.8 493 M
+(    \(lambda \(expression environment\)) s
+12.8 479 M
+(      \(make-actor-procedure) s
+12.8 465 M
+(       \(alpha-parameters expression\)) s
+12.8 451 M
+(       \(alpha-body expression\)) s
+12.8 437 M
+(       environment\)\)) s
+12.8 423 M
+(    alpha?\)) s
+12.8 395 M
+(Now, we need to specify the run-time data structures for such actor) s
+12.8 381 M
+(procedures: ) s
+12.8 353 M
+(  \(define-record-type actor-procedure) s
+12.8 339 M
+(      \(make-actor-procedure% vars bproc env task-queue runnable\)) s
+12.8 325 M
+(      actor-procedure?) s
+12.8 311 M
+(    \(vars  actor-parameters\)) s
+12.8 297 M
+(    \(bproc actor-body\)) s
+12.8 283 M
+(    \(env   actor-environment\)) s
+12.8 269 M
+(    \(task-queue get-actor-task-queue set-actor-task-queue!\)) s
+12.8 255 M
+(    \(runnable actor-runnable? set-actor-runnable!\)\)) s
+12.8 227 M
+(  \(define \(make-actor-procedure vars bproc env\)) s
+12.8 213 M
+(    \(make-actor-procedure% vars bproc env \(queue:make\) #f\)\)) s
+12.8 185 M
+(Note that actor procedures differ from ordinary compound procedures) s
+12.8 171 M
+(produced by lambda expressions, in that actor procedures have a task) s
+12.8 157 M
+(queue and a bit that is true only if the actor is scheduled to run.) s
+_R
+S
+%%Page: (5) 5
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 5 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Wed Apr 16 14:43:23 2014) def
+/pagenumstr (5) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+12.8 675 M
+(Next, we augment the apply generic operation to handle actor) s
+12.8 661 M
+(procedures:) s
+12.8 633 M
+(  \(defhandler apply) s
+12.8 619 M
+(    \(lambda \(actor operands calling-environment\)) s
+12.8 605 M
+(      \(if \(not \(= \(length \(actor-parameters actor\)\)) s
+12.8 591 M
+(                  \(length operands\)\)\)) s
+12.8 577 M
+(          \(error "Wrong number of operands supplied"\)\)) s
+12.8 563 M
+(      \(let \(\(arguments) s
+12.8 549 M
+(             \(map \(lambda \(parameter operand\)) s
+12.8 535 M
+(                    \(evaluate-procedure-operand ) s
+12.8 521 M
+(                      parameter operand calling-environment\)\)) s
+12.8 507 M
+(                  \(actor-parameters actor\)) s
+12.8 493 M
+(                  operands\)\)\)) s
+12.8 479 M
+(        \(add-to-tasks! actor) s
+12.8 465 M
+(                       \(lambda \(\)) s
+12.8 451 M
+(                         \(eval \(actor-body actor\)) s
+12.8 437 M
+(                               \(extend-environment) s
+12.8 423 M
+(                                \(map procedure-parameter-name) s
+12.8 409 M
+(                                     \(actor-parameters actor\)\)) s
+12.8 395 M
+(                                arguments) s
+12.8 381 M
+(                                \(actor-environment actor\)\)\)\)\)\)) s
+12.8 367 M
+(      'actor-applied\)) s
+12.8 353 M
+(    actor-procedure?\)) s
+12.8 325 M
+(This is just like an ordinary compound procedure except that we defer) s
+12.8 311 M
+(the actual work to be done by the actor by adding it to the tasks.) s
+12.8 297 M
+(Note that we made a choice here to defer only the execution of the) s
+12.8 283 M
+(body.  Is this choice a good one?  Suppose we wanted to also defer the) s
+12.8 269 M
+(evaluation of the operands?  We'll come back to these questions later.) s
+12.8 241 M
+(Finally, we have to provide a scheduler.  In this simple scheduler) s
+12.8 227 M
+(there is a task queue for each individual actor and there is a) s
+12.8 213 M
+(runnable queue for actors that have non-empty task queues.  A task is) s
+12.8 199 M
+(represented by a thunk.) s
+12.8 171 M
+(  \(define runnable-actors\)) s
+12.8 143 M
+(  \(define \(init-actors\)) s
+12.8 129 M
+(    \(set! runnable-actors \(queue:make\)\)\)) s
+_R
+S
+%%Page: (6) 6
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 6 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Wed Apr 16 14:43:23 2014) def
+/pagenumstr (6) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+12.8 675 M
+(The procedure run-one either returns a task to be performed or it) s
+12.8 661 M
+(signals that there are no tasks to be performed or it signals that) s
+12.8 647 M
+(a runnable actor actually has no work to do.) s
+12.8 619 M
+(  \(define \(run-one\)) s
+12.8 605 M
+(    \(if \(queue:empty? runnable-actors\)) s
+12.8 591 M
+(        'nothing-to-do) s
+12.8 577 M
+(        \(let \(\(actor \(queue:get-first! runnable-actors\)\)\)) s
+12.8 563 M
+(          \(if \(MITscheme-continuation? actor\)) s
+12.8 549 M
+(              \(lambda \(\) \(actor 'go\)\)) s
+12.8 535 M
+(              \(let \(\(actor-task-queue \(get-actor-task-queue actor\)\)\)) s
+12.8 521 M
+(                \(if \(queue:empty? actor-task-queue\)) s
+12.8 507 M
+(                    \(begin ;; Nothing for this actor to do.) s
+12.8 493 M
+(                      \(set-actor-runnable! actor #f\)) s
+12.8 479 M
+(                      'try-again\)) s
+12.8 465 M
+(                    \(let \(\(task \(queue:get-first! actor-task-queue\)\)\)) s
+12.8 451 M
+(                      \(if \(queue:empty? actor-task-queue\)) s
+12.8 437 M
+(                          \(set-actor-runnable! actor #f\)) s
+12.8 423 M
+(                          \(queue:add-to-end! runnable-actors actor\)\)) s
+12.8 409 M
+(                      task\)\)\)\)\)\)\)) s
+12.8 381 M
+(An actor that is already on the runnable-actors queue has its runnable) s
+12.8 367 M
+(bit set.  This allows the scheduler to avoid putting multiple) s
+12.8 353 M
+(references to the same actor on the runnable actors queue.) s
+12.8 325 M
+(If work is preempted by time sharing, the continuation of that work) s
+12.8 311 M
+(is also put on the runnable-actors queue, and turned into a thunk, so) s
+12.8 297 M
+(it can be executed as if it were a task.) s
+12.8 269 M
+(The scheduler is the procedure below.  It calls run-one to get work to) s
+12.8 255 M
+(do.  If it gets something to do, it executes it as a thunk and then) s
+12.8 241 M
+(goes back for more.  If it runs out, it returns.  The procedure) s
+12.8 227 M
+(atomically takes a thunk and executes it without allowing any) s
+12.8 213 M
+(interrupts, using the without-interrupts feature of MIT/GNU Scheme.) s
+12.8 199 M
+(Note that run-one is always executed atomically, preventing) s
+12.8 185 M
+(reader-writer problems on the queues it manipulates.) s
+12.8 157 M
+(  \(define \(run\)) s
+12.8 143 M
+(    \(let lp \(\(to-do \(atomically run-one\)\)\)) s
+12.8 129 M
+(      \(cond \(\(eq? to-do 'try-again\)) s
+12.8 115 M
+(             \(lp \(atomically run-one\)\)\)) s
+12.8 101 M
+(            \(\(eq? to-do 'nothing-to-do\)) s
+12.8 87 M
+(             to-do\)) s
+12.8 73 M
+(            \(else \(to-do\)) s
+12.8 59 M
+(                  \(root-continuation 'go\)\)\)\)\)) s
+_R
+S
+%%Page: (7) 7
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 7 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Wed Apr 16 14:43:23 2014) def
+/pagenumstr (7) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+12.8 675 M
+(Here we only enqueue an actor to be run if it is not already on the) s
+12.8 661 M
+(runnable queue.) s
+12.8 633 M
+(  \(define \(add-to-runnable! actor\)) s
+12.8 619 M
+(    \(atomically) s
+12.8 605 M
+(     \(lambda \(\)) s
+12.8 591 M
+(       \(if \(actor-runnable? actor\)) s
+12.8 577 M
+(           'already-runnable) s
+12.8 563 M
+(           \(begin \(set-actor-runnable! actor #t\)) s
+12.8 549 M
+(                  \(queue:add-to-end! runnable-actors actor\)) s
+12.8 535 M
+(                  'made-runnable\)\)\)\)\)) s
+12.8 507 M
+(We can give an actor new tasks to perform.  This always puts it on the) s
+12.8 493 M
+(runnable queue.) s
+12.8 465 M
+(  \(define \(add-to-tasks! actor task\)) s
+12.8 451 M
+(    \(atomically) s
+12.8 437 M
+(        \(lambda \(\)) s
+12.8 423 M
+(          \(queue:add-to-end! \(get-actor-task-queue actor\) task\)\)\)) s
+12.8 409 M
+(    \(add-to-runnable! actor\)) s
+12.8 395 M
+(    'task-added\)) s
+12.8 353 M
+(The read-eval-print loop has to be updated to correctly start the) s
+12.8 339 M
+(system:) s
+12.8 311 M
+(  \(define \(init\)) s
+12.8 297 M
+(    \(set! the-global-environment) s
+12.8 283 M
+(          \(extend-environment '\(\) '\(\) the-empty-environment\)\)) s
+12.8 269 M
+(    \(init-actors\)                               ;in schedule.scm) s
+12.8 255 M
+(    \(repl\)\)) s
+12.8 227 M
+(  \(define \(repl\)) s
+12.8 213 M
+(    \(if \(eq? the-global-environment 'not-initialized\)) s
+12.8 199 M
+(        \(error "Interpreter not initialized. Run \(init\) first."\)\)) s
+12.8 185 M
+(    \(setup-time-sharing run\)) s
+12.8 171 M
+(    \(let lp \(\(input \(read\)\)\)) s
+12.8 157 M
+(      \(let \(\(output \(eval input the-global-environment\)\)\)) s
+12.8 143 M
+(        \(write-line output\)\)) s
+12.8 129 M
+(      \(lp \(read\)\)\)\)) s
+12.8 101 M
+(  \(define \(go\) \(repl\)\)) s
+_R
+S
+%%Page: (8) 8
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 8 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Wed Apr 16 14:43:23 2014) def
+/pagenumstr (8) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+12.8 675 M
+(There is a preemptive timer interrupt that runs this whole mess.) s
+12.8 661 M
+(There is an MIT/GNU Scheme specific detail.  register-timer-event is) s
+12.8 647 M
+(the MIT/GNU Scheme mechanism for delivering a timer interrupt.  When) s
+12.8 633 M
+(the time specified by its first argument expires, it invokes the) s
+12.8 619 M
+(second argument.  ) s
+12.8 605 M
+(This part of the system was very hard to get right: GJS was up all) s
+12.8 591 M
+(night debugging it!) s
+12.8 563 M
+(  \(define \(setup-time-sharing thunk\)) s
+12.8 549 M
+(    \(set! user-continuation thunk\)) s
+12.8 535 M
+(    \(call-with-current-continuation) s
+12.8 521 M
+(     \(lambda \(k\)) s
+12.8 507 M
+(       \(set! root-continuation k\)) s
+12.8 493 M
+(       \(start-time-sharing\)\)\)) s
+12.8 479 M
+(    ;; note: when time-sharing terminates the ) s
+12.8 465 M
+(    ;;user continuation is run again. ) s
+12.8 451 M
+(    \(user-continuation\)\)) s
+12.8 423 M
+(  \(define time-sharing:quantum 100\) ) s
+12.8 409 M
+(  \(define time-sharing-enabled? #t\)) s
+12.8 395 M
+(  \(define time-sharing? #f\)) s
+12.8 367 M
+(In fact, to help understand this, Pavel rewrote this procedure,) s
+12.8 353 M
+(refactoring it to clarify the organization) s
+12.8 325 M
+(  \(define \(start-time-sharing\)) s
+12.8 311 M
+(    \(set! time-sharing? time-sharing-enabled?\)) s
+12.8 297 M
+(    \(define \(setup-interrupt\)) s
+12.8 283 M
+(      \(if time-sharing?) s
+12.8 269 M
+(          \(register-timer-event time-sharing:quantum) s
+12.8 255 M
+(                                on-interrupt\)\)\)) s
+12.8 241 M
+(    \(define \(on-interrupt\)) s
+12.8 227 M
+(      \(setup-interrupt\)            ; Recursive interrupt setup) s
+12.8 213 M
+(      \(call-with-current-continuation) s
+12.8 199 M
+(       \(lambda \(worker-continuation\)) s
+12.8 185 M
+(         \(define \(grab-a-continuation\)) s
+12.8 171 M
+(           \(atomically) s
+12.8 157 M
+(            \(lambda \(\)) s
+12.8 143 M
+(              \(queue:add-to-end!) s
+12.8 129 M
+(               runnable-actors worker-continuation\)\)\)\)) s
+12.8 115 M
+(         \(grab-a-continuation\)) s
+12.8 101 M
+(         \(root-continuation 'go\)\)\)\)) s
+12.8 87 M
+(    \(setup-interrupt\)\)) s
+12.8 59 M
+(  \(define \(stop-time-sharing\)) s
+12.8 45 M
+(    \(set! time-sharing? #f\)\)) s
+_R
+S
+%%Page: (9) 9
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 9 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Wed Apr 16 14:43:23 2014) def
+/pagenumstr (9) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+12.8 675 M
+(There are a few more things that are necessary to make this system.) s
+12.8 661 M
+(All user variables that are modified must be protected from) s
+12.8 647 M
+(reader-writer problems.) s
+12.8 619 M
+(  \(define \(set-variable-value! var val env\)) s
+12.8 605 M
+(    \(let plp \(\(env env\)\)) s
+12.8 591 M
+(      \(if \(eq? env the-empty-environment\)) s
+12.8 577 M
+(          \(error "Unbound variable -- SET!" var\)) s
+12.8 563 M
+(          \(let scan) s
+12.8 549 M
+(              \(\(vars \(vector-ref env 0\)\)) s
+12.8 535 M
+(               \(vals \(vector-ref env 1\)\)\)) s
+12.8 521 M
+(            \(cond \(\(null? vars\) \(plp \(vector-ref env 2\)\)\)) s
+12.8 507 M
+(                  \(\(eq? var \(car vars\)\)) s
+12.8 493 M
+(                   \(double-check-lock) s
+12.8 479 M
+(                    \(lambda \(\) \(eq? var \(car vars\)\)\)) s
+12.8 465 M
+(                    \(lambda \(\)) s
+12.8 451 M
+(                      \(set-car! vals val\)\)) s
+12.8 437 M
+(                    \(lambda \(\) \(plp env\)\)\)\)) s
+12.8 423 M
+(                  \(else \(scan \(cdr vars\) \(cdr vals\)\)\)\)\)\)\)\)) s
+12.8 395 M
+(The assignment of the variable is guaranteed to be atomic.  There is a) s
+12.8 381 M
+(similar, but somewhat hairier problem with define-variable!.) s
+12.8 353 M
+(-------------) s
+12.8 339 M
+(Problem 9.1:  ) s
+12.8 311 M
+(Here is a simple program that is implemented with actors.  ) s
+12.8 283 M
+(  \(define \(foo n\)) s
+12.8 269 M
+(    \(define \(buzz m\)) s
+12.8 255 M
+(      \(if \(not \(= m 0\)\) \(buzz \(- m 1\)\)\)\)    ) s
+12.8 241 M
+(    \(define iter) s
+12.8 227 M
+(      \(alpha \(l i\)) s
+12.8 213 M
+(        \(if \(not \(= i 0\)\)) s
+12.8 199 M
+(            \(begin) s
+12.8 185 M
+(              \(if \(eq? l 'a\) \(buzz \(* 100 i\)\) \(buzz \(* 100 \(- n i\)\)\)\)) s
+12.8 171 M
+(              \(pp \(list l i\)\)) s
+12.8 157 M
+(              \(iter l \(- i 1\)\)\)\)\)\)) s
+12.8 143 M
+(    \(iter 'a n\)) s
+12.8 129 M
+(    \(iter 'b n\)\)) s
+_R
+S
+%%Page: (10) 10
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 10 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Wed Apr 16 14:43:23 2014) def
+/pagenumstr (10) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+12.8 675 M
+(When I ran this program I got the following output:) s
+12.8 647 M
+(  eval> \(foo 10\)) s
+12.8 633 M
+(  actor-applied) s
+12.8 605 M
+(  eval> \(b 10\)) s
+12.8 591 M
+(  \(b 9\)) s
+12.8 577 M
+(  \(b 8\)) s
+12.8 563 M
+(  \(a 10\)) s
+12.8 549 M
+(  \(b 7\)) s
+12.8 535 M
+(  \(b 6\)) s
+12.8 521 M
+(  \(a 9\)) s
+12.8 507 M
+(  \(b 5\)) s
+12.8 493 M
+(  \(b 4\)) s
+12.8 479 M
+(  \(a 8\)) s
+12.8 465 M
+(  \(b 3\)) s
+12.8 451 M
+(  \(a 7\)) s
+12.8 437 M
+(  \(a 6\)) s
+12.8 423 M
+(  \(b 2\)) s
+12.8 409 M
+(  \(a 5\)) s
+12.8 395 M
+(  \(b 1\)) s
+12.8 381 M
+(  \(a 4\)) s
+12.8 367 M
+(  \(a 3\)) s
+12.8 353 M
+(  \(a 2\)) s
+12.8 339 M
+(  \(a 1\)) s
+12.8 311 M
+(You may get a different order than I got.  Why do we get this output) s
+12.8 297 M
+(in such a strange order?  Explain what you see here.) s
+12.8 283 M
+(-------------   ) s
+12.8 255 M
+(-------------) s
+12.8 241 M
+(Problem 9.2:) s
+12.8 213 M
+(Note that we have made a choice in the handler for application of) s
+12.8 199 M
+(actor procedures: we defer only the execution of the body.  Is this) s
+12.8 185 M
+(choice a good one?  Suppose we wanted to also defer the evaluation of) s
+12.8 171 M
+(the operands?  ) s
+12.8 143 M
+(a. Explain, in a short clear paragraph your opinion on this matter.) s
+12.8 115 M
+(b. Write an apply handler for actors that defers the evaluation of) s
+12.8 101 M
+(   operands.  Demonstrate it.  Does it have the properties you expect?) s
+12.8 87 M
+(   ) s
+12.8 73 M
+(c. Would it be advantageous to supply another kind of object, perhaps ) s
+12.8 59 M
+(   defined by a "beta expression" that has this behavior?) s
+12.8 45 M
+(-------------   ) s
+_R
+S
+%%Page: (11) 11
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 11 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Wed Apr 16 14:43:23 2014) def
+/pagenumstr (11) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+12.8 675 M
+(-------------) s
+12.8 661 M
+(Problem 9.3:) s
+12.8 633 M
+(The procedure double-check-lock is used in set-variable-value! and ) s
+12.8 619 M
+(define-variable!.) s
+12.8 591 M
+(  \(define \(double-check-lock check do if-not\)) s
+12.8 577 M
+(    \(let \(\(outside) s
+12.8 563 M
+(           \(atomically) s
+12.8 549 M
+(            \(lambda \(\)) s
+12.8 535 M
+(              \(if \(check\)) s
+12.8 521 M
+(                  \(begin \(do\)) s
+12.8 507 M
+(                         \(lambda \(\) 'ok\)\)) s
+12.8 493 M
+(                  if-not\)\)\)\)\)) s
+12.8 479 M
+(      \(outside\)\)\)) s
+12.8 451 M
+(Why is it needed?  Explain how it works.) s
+12.8 437 M
+(-------------   ) s
+12.8 409 M
+(-------------) s
+12.8 395 M
+(Problem 9.4:) s
+12.8 367 M
+(The first "actor implementation" of the Fibonacci procedure was) s
+12.8 339 M
+(      \(define fib1) s
+12.8 325 M
+(        \(alpha \(n c\)) s
+12.8 311 M
+(          \(if \(< n 2\)) s
+12.8 297 M
+(              \(c n\)) s
+12.8 283 M
+(              \(let \(\(x 'not-ready\) \(y 'not-ready\)\)) s
+12.8 269 M
+(                \(define wait-for-xy) s
+12.8 255 M
+(                  \(alpha \(k\)) s
+12.8 241 M
+(                         \(if \(boolean/or \(eq? x 'not-ready\)) s
+12.8 227 M
+(                                         \(eq? y 'not-ready\)\)) s
+12.8 213 M
+(                             \(wait-for-xy k\)) s
+12.8 199 M
+(                             \(k #t\)\)\)\)) s
+12.8 185 M
+(                \(fib1 \(- n 1\) \(lambda \(v\) \(set! x v\)\)\)) s
+12.8 171 M
+(                \(fib1 \(- n 2\) \(lambda \(v\) \(set! y v\)\)\)) s
+12.8 157 M
+(                \(wait-for-xy \(lambda \(ignore\) \(c \(+ x y\)\)\)\)\)\)\)\)) s
+12.8 129 M
+(a. Why is this so slow compared with the traditional version of fib) s
+12.8 115 M
+(defined as a doubly-recursive function in the same interpreter?) s
+_R
+S
+%%Page: (12) 12
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 12 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Wed Apr 16 14:43:23 2014) def
+/pagenumstr (12) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+12.8 675 M
+(Perhaps it is worthwhile to consider the following alternative) s
+12.8 661 M
+(implementation of Fibonnaci:) s
+12.8 633 M
+(     \(define fib2) s
+12.8 619 M
+(       \(alpha \(n c\)) s
+12.8 605 M
+(         \(if \(< n 2\)) s
+12.8 591 M
+(             \(c n\)) s
+12.8 577 M
+(             \(let \(\(x 'not-ready\) \(y 'not-ready\)\)) s
+12.8 563 M
+(               \(define check-if-done) s
+12.8 549 M
+(                 \(lambda \(\)) s
+12.8 535 M
+(                   \(if \(boolean/or \(eq? x 'not-ready\)) s
+12.8 521 M
+(                                   \(eq? y 'not-ready\)\)) s
+12.8 507 M
+(                       #f) s
+12.8 493 M
+(                       \(c \(+ x y\)\)\)\)\)) s
+12.8 479 M
+(               \(fib2 \(- n 1\)) s
+12.8 465 M
+(                     \(lambda \(v\)) s
+12.8 451 M
+(                       \(set! x v\)) s
+12.8 437 M
+(                       \(check-if-done\)\)\)) s
+12.8 423 M
+(               \(fib2 \(- n 2\)) s
+12.8 409 M
+(                     \(lambda \(v\) ) s
+12.8 395 M
+(                       \(set! y v\)) s
+12.8 381 M
+(                       \(check-if-done\)\)\)\)\)\)\)) s
+12.8 353 M
+(The essential difference is that the end test in the first version is) s
+12.8 339 M
+(implemented as an actor loop, whereas in the second version it is) s
+12.8 325 M
+(implemented as a Scheme procedure.  ) s
+12.8 297 M
+(b. The fib2 implementation happens to have a subtle bug.  Sometimes it) s
+12.8 283 M
+(prints the result multiple times: try \(fib2 10 write-line\) a few) s
+12.8 269 M
+(times, if you don't see ths problem \(it is a heisenbug -- see) s
+12.8 255 M
+(Wikipedia\) try other numbers, like 8,9,11.  Can you explain why this) s
+12.8 241 M
+(occurs?  How could you fix it?  Caution: this is very hard.) s
+12.8 227 M
+(-------------) s
+_R
+S
+%%Page: (13) 13
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 13 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Wed Apr 16 14:43:23 2014) def
+/pagenumstr (13) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+12.8 675 M
+(                               Futures) s
+12.8 647 M
+(The procedures that were illustrated in Problem 9.4 share an idea.  An) s
+12.8 633 M
+(actor is started; when it finishes it sets a return value in the) s
+12.8 619 M
+(caller.  The caller must check when the results of pending) s
+12.8 605 M
+(computations are completed for it to proceed to use those results.) s
+12.8 591 M
+(This pattern should be abstracted.  One way is by the introduction of) s
+12.8 577 M
+("future"s.  \(This abstraction was introduced by Robert H. Halstead,) s
+12.8 563 M
+(Jr. in the early 1980's.  Sometimes futures are called "promises", but) s
+12.8 549 M
+(this word usually refers to delay thunks.\)  With futures, the code for) s
+12.8 535 M
+(Fibonacci looks like:) s
+12.8 507 M
+(  \(define fib) s
+12.8 493 M
+(    \(alpha \(n c\)) s
+12.8 479 M
+(      \(if \(< n 2\)) s
+12.8 465 M
+(          \(c n\)) s
+12.8 451 M
+(          \(let \(\(xp \(future \(lambda \(k\) \(fib \(- n 1\) k\)\)\)\)) s
+12.8 437 M
+(                \(yp \(future \(lambda \(k\) \(fib \(- n 2\) k\)\)\)\)\)) s
+12.8 423 M
+(            \(wait xp ) s
+12.8 409 M
+(              \(lambda \(x\)) s
+12.8 395 M
+(                \(wait yp) s
+12.8 381 M
+(                  \(lambda \(y\)) s
+12.8 367 M
+(                    \(c \(+ x y\)\)\)\)\)\)\)\)\)\)) s
+12.8 339 M
+(  eval> \(fib 10 write-line\)) s
+12.8 325 M
+(  actor-applied) s
+12.8 311 M
+(  55) s
+12.8 283 M
+(Notice that the future converts the continuation into an object whose) s
+12.8 269 M
+(fulfillment one can wait for.  ) s
+12.8 241 M
+(A future is a mutable data structure.  It contains a continuation, a) s
+12.8 227 M
+("done" flag, a value.  When a future gets fulfilled, its value is) s
+12.8 213 M
+(stored, and the done flag is set.) s
+12.8 185 M
+(-------------) s
+12.8 171 M
+(Problem 9.5:) s
+12.8 143 M
+(Here we implement futures.  The implementation should be added to the ) s
+12.8 129 M
+(guest interpreter.) s
+12.8 101 M
+(a. Your first job is to construct the data structure for a future.  We) s
+12.8 87 M
+(   recommend using record structures for this.) s
+12.8 59 M
+(b. Implement procedures FUTURE and WAIT.  Make sure that your WAIT) s
+12.8 45 M
+(   does not hang: it should return immediately but put a continuation) s
+12.8 31 M
+(   on a queue of things to do.  Assume here that a future is waited on) s
+12.8 17 M
+(   only once.  Make sure that you protect critical regions with) s
+12.8 3 M
+(   ATOMICALLY.) s
+_R
+S
+%%Page: (14) 14
+%%BeginPageSetup
+_S
+18 36 translate
+/pagenum 14 def
+/fname (ps.txt) def
+/fdir (.) def
+/ftail (ps.txt) def
+% User defined strings:
+/fmodstr (Wed Apr 16 14:43:23 2014) def
+/pagenumstr (14) def
+/user_header_p false def
+/user_footer_p false def
+%%EndPageSetup
+do_header
+12.8 675 M
+(c. What goes wrong with your implementation if the assumption is) s
+12.8 661 M
+(   violated? ) s
+12.8 633 M
+(d. Improve your implementation to relax the assumption.) s
+12.8 619 M
+(-------------) s
+_R
+S
+%%Trailer
+%%Pages: 14
+%%DocumentNeededResources: font Courier-Bold Courier 
+%%EOF

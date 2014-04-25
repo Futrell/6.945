@@ -1947,10 +1947,10 @@ double = (lambda (x) (+ x x))
 			   (divider h-ba s-ba ratio)
 			   (multiplier s ratio h)))))
 
-(define barometer-height (make-cell)
-(define barometer-shadow (make-cell)
-(define building-height (make-cell)
-(define building-shadow (make-cell)
+(define barometer-height (make-cell))
+(define barometer-shadow (make-cell))
+(define building-height (make-cell))
+(define building-shadow (make-cell))
 (similar-triangles barometer-shadow barometer-height
 		   building-shadow building-height)
 
@@ -2972,4 +2972,155 @@ double = (lambda (x) (+ x x))
 ;;; the same thing when I do it again. You can make a canonical copy:
 ;;; then the two copies are in the same memory address.
 
+;;; 4-18-14
+;;;
+;;; P = George's mother is ugly
+;;; R = Harry's mother is ugly
+;;; Q = George's mother is more stupid than Harry.
+;;; S = Harry's mother is more stupid than George.
+;;; Let (Um x) = x's mother is ugly
+;;; Then P = (Um George) and R = (Um Harry)
+;;; Let (MS x y) = x's mother is more stupid than y
+;;; So Q = (MS George Harry)
+;;;    S = (MS Harry George)
+;;;
+;;; (ugly x) = x is ugly
+;;; (mother x) ; assume everyone has a unique mother
+;;; P = (ugly (mother George))
+;;; Q = (ugly (mother Harry))
+;;; T = (nice (mother George))
+;;;
+(more x y) ;= x is more than y
+(stupidity x) ;= the stupidity of x
+(and (ugly (mother George))
+     (more (stupidity (mother George))
+           (stupidity Harry)))
 
+;;; What about quotation? 
+;;; E.g. George says "the morning star is Venus"
+;;;      The morning star is the evening star.
+;;; Not -> George says "the evening star is Venus"
+;;; You can't substitute equals for equals inside a quotation.
+;;; We won't talk about this now.
+
+;;; How about "there is no one stupider than George"?
+
+(not (Exists (x)
+	     (more (stupidity x)
+		   (stupidity George))))
+
+(All (x)
+     (implies (more (stupidity x)
+		    (stupidity Harry))
+	      (ugly x)))
+
+;;; Exists is the OR of all possible things that could have been
+;;; substituted for x. All is the AND of all those things. 
+;;; These are binding constructs that produce new variables. 
+
+;;; OK so what is a legitimate argument now that we have these things?
+
+;;; All (x) man(x) -> mortal(x)
+;;; man(Socrates)
+;;; ------------------
+;;; mortal(Socrates)
+
+;;; We use the method of interpretation: don't want to deduce a false
+;;; result from true antecedents. 
+
+;;; All(x) Every(y) P(x,y) NOT-> Every(y) All(x) P(x, y)
+;;; Every(x) All(y) P(x,y) -> All(x) Every(y) P(x, y)
+;;; The first one is not true for integers P(x,y) = x <= y
+;;; For the second one, there is no interpretation that is wrong. If
+;;; the consequent is false then there is an x0 for which there is no
+;;; y that makes p true. 
+
+#|
+
+1. All y [(greek y) -> (human y)] premise {1}
+2. All x [(human x) -> (mortal x)] premise {2}
+3. (greek *G) premise {3}
+4. (greek *G) -> (human *G) (US 1 *G y) {1} ; universal specialization
+5. (human *G) (MP 4 3) {1 3}
+6. (human *G) -> (mortal *G) (US 2 *G x) {2}
+7. (mortal *G) (MP 6 5) {1 2 3}
+8. (greek *G) -> (mortal *G) (CP 7 3) {1 2} ; conditional proof
+9. All z [(greek z) -> (mortal z)] (UG 8 z *G) {1 2} ; universal generalization
+
+|#
+
+;;; Universal generalization. Substitute an arbitrary value for a
+;;; constant. Suppose I'd written:
+;;;
+;;; 10. All z mortal(z) (UG 7 z *G) {1 2 3}
+;;;
+;;; It's not fine because it depends on 3, which was a premise. 
+;;; But we could do this (redundantly):
+;;;
+;;; 13. All z [(human z) -> (mortal z)] (UG 6 z *G) {2}
+;;;
+;;; Rule:
+;;; n    P               ---          d
+;;; -----------------------------------
+;;; m   All x S[x;t;P]  (UG n x t)    d
+;;; (substituting x for t in P)
+;;;
+;;; Universal specification:
+;;; n   All x P               ---          d
+;;; -----------------------------------
+;;; m   S[x;t;P]             (UG n t x)    d
+;;;
+;;; With restrictions.
+;;;
+;;; How about existential generalization? 
+;;; (greek Socrates) -> Exists x (greek x)
+;;; (greek (mother Socrates)) -> Exists x (greek x)
+;;; 
+;;; All x (> (+ x 1) x)
+;;; NOT-> Exists y (All x (> y x))
+;;;
+;;; The problem is the original predicate contained a variable. So
+;;; there's a restriction on generalization.
+;;; Existential Generalization has a rule: t is a term which contains
+;;; no variables and x may not appear in P.
+;;; 
+;;; n      P                 ------     d
+;;; -------------------------------------
+;;; m  Exists x S[x;t;P]   (EG n x t)   d
+;;;
+;;; Existential specification:
+;;;
+;;; n  Exists x P            ------     d
+;;; -------------------------------------
+;;; m  S[x;t;P]            (ES n t x)   d
+;;;
+;;; Restriction: ...
+;;;
+;;; Suppose we know:
+;;; Exists x (horse x)
+;;; All y [(horse y) -> (animal y)]
+;;; ?-> Exists z (animal z)
+;;; 
+;;; Consider one of the horses that is asserted to exist. It must be
+;;; an animal hence there must be an animal. 
+;;;
+;;; Exists x (horse x) NOT-> (horse Socrates)
+;;; So ES must produce a brand new constant.
+;;; The choice for existential has to depend on existing variables.
+;;; All x Exists y P(x, y) -> P(x*, f(x*)) where f(x*) is the y I can
+;;; choose. This was invented by Skolem. When you specify the exists
+;;; you have to manufacture a function of all things that have already
+;;; been established as arbitrary individuals. 
+;;;
+;;; Restriction on ES:
+;;; In this rule t is a term composed of a new function symbol applied
+;;; to the list of the arbitrary individuals occuring in P.
+;;;
+;;; Jeynes on probability.
+;;; 
+
+;;; 4-23-14
+;;;
+;;; Robert McIntyre will argue today.
+;;;
+;;; 
