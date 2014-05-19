@@ -3123,4 +3123,494 @@ double = (lambda (x) (+ x x))
 ;;;
 ;;; Robert McIntyre will argue today.
 ;;;
-;;; 
+;;;
+
+;;; 4-25-14
+;;;
+;;; I missed it
+
+;;; 4-28-14
+;;;
+;;; Making a register machine. You can implement an interpreter in any
+;;; language. Imagine you have registers form, val, retpc, env, unev,
+;;; fun, argl.
+
+(define (run expr)
+  (retpc 'clear) ; return address
+  (env 'clear)
+  (unev 'clear)
+  (argl 'clear)
+  (fun 'clear)
+
+  (assign env the-top-level-environment)
+  (duplicate env)
+  (assign form expression)
+  (eval-exp-result-to return)) ; send stuff to return
+
+(define (return)
+  (restore env) ; restore the environment
+  (let ((r (count retpc)) ; figure out something to print out
+        (e (count env))
+        (u (count unev))
+        (a (count argl))
+        (f (count fun)))
+    `(,(+ r e u a f) 
+      (retpc ,r)
+      (env ,e)
+      (unev ,u)
+      (argl ,a)
+      (fun ,f)))
+  (fetch val)) ; the answer ends up in val
+
+(define (fetch reg)
+  (ref 'fetch))
+
+(define (duplicate reg)
+  (reg 'duplicate))
+
+(define (eval-exp-result-to pc)
+  (assign retpc pc)
+  (save retpc)
+  (go eval-dispatch))
+
+(define (popj)
+  (restore retpc)
+  (go (fetch retpc)))
+
+(define (go label)
+  (label))
+
+(define (count reg)
+  (reg 'count))
+
+(define (assign reg value)
+  ...)
+
+;;; There's a parse phase that takes the expressions and turns them
+;;; into S-code. E.g.
+
+(cond ((p1 c1)
+       (p2 c2)
+       (else c3)))
+
+;;; First that turns into nested ifs:
+
+(if p1 c1
+    (if p2 c2 (...)))
+
+;;; So the cond is turns into a structure with a type tag "if" and a
+;;; pointer. The pointer points at a 3-word element p c a. a might
+;;; contain another if structure. The special forms of the langauge
+;;; turn into the opcodes for the machine. S-code. There's also
+;;; something called cdr coding to avoid nonlocal memory references.
+
+(define (eval-dispatch)
+  ;; go through all the possible kinds of primitive expressions and
+  ;; special forms
+  (cond ((self-evaluating? (fetch form))
+         (assign val (fetch form))
+         (popj))
+        ((variable? (fetch form))
+         (assign val
+                 (lookup (fetch form) (fetch env)))
+         (popj))
+        ((lambda-expression? (fetch form))
+         (assign val
+                 (make-closure
+                  (lambda-bound-variables (fetch form))
+                  (lambda-body (fetch form))
+                  (fetch env)))
+         (popj))
+        ((conditional? (fetch form))
+         (assign unev (fetch form))
+         (go evcond-pred))
+        ((definition? (fetch form))
+         (assign unev (fetch form))
+         (assign form
+                 (defining-expression (fetch unev)))
+         (duplicate env)
+         (save unev)
+         (eval-exp-result-ro define-it))
+        ((no-args? (fetch form))
+         (assign form (operator (fetch form)))
+         (eval-exp-result-to apply-no-args))
+        (else
+         (assign unev (operands (fetch form)))
+         (assign form (operator (fetch form)))
+         (duplicate env)
+         (save unev)
+         (eval-exp-result-to eval-args))))
+
+(define (evcond-pred)
+  (assign unev (clauses (fetch unev)))
+  (assign form
+          (first-clause-predicate (fetch unev)))
+  (duplicate env)
+  (save unev)
+  (eval-exp-result-to evcond-decide))
+
+(define (evcond-decide)
+         (cond ((true? (fetch val))
+                (resture unev)
+                (restore env)
+                (assign form
+                        (first-clause-consequent (fetch unev)))
+                (go eval-dispatch))
+               (else
+                (restore unev)
+                (restore env)
+                (go evcond-pred))))
+
+(define (apply-no-args)
+  (assign fun (fetch val))
+  (assign argl (the-empty-arglist))
+  (go internal-apply))
+
+(define (eval-args)
+  (restore unev)
+  (restore env)
+  (assign argl (the-empty-arglist))
+  (assign fun (fetch val))
+  (save fun)
+  (go eval-args1))
+
+(define (eval-args1)
+  (assign form
+          (next-operand (fetch unev)))
+  (assign unev
+          (rest-operands (fetch unev)))
+  (save argl)
+  (cond ((no-more-operands? (fetch unev))
+         (eval-exp-result-to eval-last-arg))
+        (else
+         (duplicate env)
+         (save unev)
+         (eval-exp-result-to eval-args2))))
+
+(define (eval-args2)
+  ;; restore all those and go to internal-apply
+  )
+
+(define (internal-apply?)
+  (cond ((primop? (fetch fun)
+                  (fetch argl))
+         (popj))
+        ((closure? (fetch fun))
+         (assign env
+                 (bind
+                  (closure-variables (fetch fun))
+                  ...)))))
+
+;;; Now the good stuff. We wanted to experiment with ways to make more
+;;; and more efficient interpreters. Lots of unnecessary saves and
+;;; restores in what I just did, but I want to avoid memory
+;;; references.
+
+(define (make-register)
+  (let ((value 'nothing))
+    (lambda (message)
+      (case message
+        ((fetch) value)
+        ((assign)
+         (lambda (new-value)
+           (set! value new-value)))
+        (else
+         (error "Unknown message" message))))))
+
+;;; Q. How to do eq? in lambda calculus? A. Check memory
+;;; addresses. Maybe something extra.
+
+;;; Experiment: What if I have an ordinary stack?
+
+(define *the-stack* '())
+(define (make-traditional-rack) ; a register which can be pushed and popped
+  (let ((value 'nothing) (count))
+    (lambda (message)
+      (case message
+        ((fetch) value)
+        ((assign)
+         (lambda (new-value
+                  (set! value new-value)))
+         ...)))))
+
+(define form (make-register))
+(define val (make-register))
+(define retpc (make-traditional-rack))
+;; define other registers
+
+(run '(fact 6))
+(273
+ (retpc 85)
+ (env 59)
+ (unev 58)
+ ...)
+
+(fun '(fib 10))
+(8128 ...)
+;;; Fibonacci does a lot of crap!
+
+;;; We'll get this down to a reasonable number of memory ops by adding
+;;; more state to the registers. 
+
+;;; one stack per register
+(define (make-simple-rack)
+  (let ((value 'nothing) (stack) (count))
+    (lambda (message)
+      (case message
+        ((fetch) value)
+        ;; same as above but the stack being talked about is local as
+        ;; initialized in the let, rather than global.
+        ))))
+
+;;; This has no interesting properties: the experiment produces the
+;;; same number of operations.
+
+(define (make-push-optimizer-rack)
+  ;; associate a single bit with each register called the
+  ;; state. imagine all you add to a register is one extra bit,
+  ;; in-use. If I assign then I have to save as well as push but if
+  ;; it's available then I don't have to save. Also optimize a push
+  ;; followed by a pop with nothing in between.
+  ;; Q. Caching? A. No, it's not a separate register. 
+  )
+
+;;; Now fib is down to 2106 operations and fact is down to 59.
+
+(define (make-push-counter-rack)
+  (let ((value 'nothing)
+        (stack)
+        (pcount)
+        (count))
+    (lambda (message)
+      (case message
+        ((fetch) value)
+        ((restore)
+         (if (= pcount 0)
+             ...))))))
+
+;;; That's slightly worse than the push-optimizer. 
+
+
+;;; 4-30-14
+;;;
+;;; Today memoization and garbage collection.
+
+(define (memo n f)
+     (if (< n 2)
+         (error "memo needs at least 2 cells")
+         (let ((memory
+                (make-initialized-list n
+                                       (lambda (i) (cons (list '()) #f))))
+               (n-2 (- n 2)))
+           (lambda ()
+             (let ((vcell (assv x memory)))
+               (if vcell
+                   (cdr vcell)
+                   (let ((v (f x))
+                         (end (list-tail memory n-2)))
+                     (let ((lastp (cdr end)))
+                       (set-car! (car lastp) x)
+                       (set-cdr! (car lastp) v)
+                       (set-cdr! ...)))))))))
+
+;;; Sometimes you want to remember more complicated objects like
+;;; symbolic objects.
+
+(define (hash-memo f)
+  (let ((memory (make-weak-equal-hash-table)))
+    (lambda ()
+      (let ((vals (hash-table/get memory x #f)))
+        (or vals (let ((val (f x)))
+                   (hash-table-put! emmory x val)
+                   val))))))
+
+(define make-weak-equal-hash-table
+  (weak-hash-table/constructor
+   equal-hash-mod
+   equal?
+   #t))
+
+;;; Don't do this for numbers, but it does work for symbolic
+;;; objects. Because it is hard to compare equality of numbers.
+
+;;; Want a program that can prove that some information will not
+;;; affect the future of the computation. Our register machine thing
+;;; built in structures like the environment and various stacks, and
+;;; unless data was pointed at by something from one of those places,
+;;; it can't affect the future. So GC collects the transitive closure
+;;; of all the roots of the system. So usually you do some marking and
+;;; sweep up everything that isn't touched by those marks. Another way
+;;; is to copy the transitive closure and deallocate the rest.
+
+;;; Suppose I want to be able to put sticky notes on things. Property
+;;; lists allow you to extend the fields of an object.
+
+(define eq-properties (make-eq-hash-table))
+
+(define (eq-put! node property value)
+  (let ((plist
+         (hash-table/get eq-properties node '())))
+    (let ((vcell (assq property plist)))
+      (if vcell
+          (set-cdr! vcell value)
+          (hash-table/put! eq-properties node
+                           (cons (cons property value) plist)))))
+  'done)
+
+(define (eq-get node property)
+  (let ((plist
+         (hash-table/get eq-properties node '())))
+    (let ((vcell (assq property plist)))
+      (if vcell
+          (cdr vcell)
+          #f))))
+
+;;; But I want to keep the hash table from getting arbitrary
+;;; large. What if I'm doing simplification? Let's use weak
+;;; pointers. Weak pointers are things that don't let GC go through
+;;; the transitive closure. In the hash table, pairs are indexed by
+;;; the key, but suppose someone drops the key. I don't want the datum
+;;; to be held any more. Then you need a daemon to clean the keys out
+;;; of the hash table when they don't weak-point to anything anymore
+;;; (?).
+
+(define (count-pairs data)
+  (let ((counter-id (list '())))
+    (let lp ((data data) (count 0))
+      (if (pair? data)
+          (let ((seen (eq-get data counter-id)))
+            (if seen
+                count
+                (begin
+                  (eq-put! data counter-id #t)
+                  (lp (cdr data)
+                      (lp (car data)
+                          (+ count 1))))))
+          count))))
+
+(count-pairs '(text of count-pairs))
+;Value: 64
+
+;;; The weak table means nothing will be saved from this counting
+;;; operation; now it's gone.
+
+;;; Last time we saw unifiers.
+
+
+;;; Now I'll invent hash-cons. Expensive by comparison to cons.
+;;; Imagine a unifier with list-unique and hash-cons whereever cons
+;;; happened previously.
+
+;;; Given two arguments hash-cons returns a pair. If exactly the same
+;;; two arguments were previously combined with hash-cons it returns
+;;; the same pair it returned the first time.
+
+(define cons-unique
+  (let ((the-test-pair (cons #f #f)))
+  (define (hashcons x y)
+    (set-car! the-test-pair x) ; klobber the x and y
+    (set-cdr! the-test-pair y)
+    (let ((weak-pair ; I want to ask the hash table to tell me if
+                     ; there is something that looks like this in the
+                     ; hash table, and if not, make one up, which is a
+                     ; weak pair. A weak pair that is weak in both
+                     ; ends. Why weak? Don't hold if it's only being
+                     ; pointed to by the hash table. Make sure the
+                     ; datum that's stored with the key in the hash
+                     ; table doesn't hold the key.
+           (hash-table/intern! the-cons-table
+                               the-test-pair
+                               (lambda ()
+                                 (weak-cons the-test-pair
+                                            #f))))) ; 
+      (let ((the-canonical-pair
+             (weak-car weak-pair))) 
+        (cond ((eq? the-canonical-pair
+                    the-test-pair)
+               ;; test pair used; must make a new one
+               (set! the-test-pair
+                     (cons #f #f)))
+              (else ; clear test pair
+               (set-car! the-test-pair #f)
+               (set-cdr! the-test-pair #f)))
+        the-canonical-pair)))
+  hashcons))
+
+(define the-cons-table
+  ((hash-table/constructor
+    pair-eqv-hash-mod
+    pair-eqv?
+    #t
+    hash-table-entry-type:key-weak)))
+
+(define (canonical-copy x)
+  (define (recurse)
+    (hash-cons (canonical-copy (car x))
+               (canonical-copy (cdr x))))
+  (if (pair? x)
+      (let ((v
+             (hash-table/get
+              the-hashed-conses x #f)))
+        (if x
+            (or (weak-car v)
+                (and (not (weak-pair/car? v))
+                     (recurse)))
+            (recurse)))
+      x))
+
+;;; Q. How to make a secure system?
+;;; A. Can't be in C. No manual storage alloc and dealloc. No pointer
+;;; arithmetic. 
+
+;;; 5-2-2014
+;;;
+;;; Philosophy.
+
+(define (gravitation p1 p2)
+  (let* ((dx (- (position p1) (position p2)))
+         (rcube (cube (euclidean-norm dx)))
+         (am (/ (* G dx) rcube)))
+    (cons (* -1 (mass p2) am) ; force of p2 on p1
+          (* +1 (mass p1) am)))) ; force of p1 on p2
+
+;;; Take a 2-body force procedure and make n-body accelerations.
+
+(define (force-law->acc force-law)
+  (define (accelerations bodies)
+    (let ((p (first bodies)) (r (rest bodies)))
+      (if (= (length r) 1)
+          (let ((inc (force-law p (car r)))) ; 2 body case
+            (list (car inc) (cdr inc)))
+          (let ((incs
+                 (map (lambda (other)
+                        (force-law p other))
+                      r)))
+            (cons (reduce + (map car incs))
+                  (map +
+                       (map cdr incs)
+                       (accelerations r)))))))
+  accelerations)
+
+(define (system-derivative force-law)
+  (let ((accelerations.(force-law->acc force-law)))
+    (lambda (system-state)
+      (make-system 1
+                   (map (lambda (p a)
+                          (make-particle (name p)
+                                         0 ; dm/dt
+                                         (velocity p)
+                                         a))
+                        (particles system-state)
+                        (accelerations.(particles system-state)))))))
+
+  
+(define ((Lagrange-equations Lagrangian) q)
+  (- (D (compose ((partial 2) Lagrangian)
+                 (Gamma q)))
+     (compose ((partial 1) Lagrangian)
+              (Gamma q))))
+
+(define ((Gamma q) t)
+  (up t (q t) ((D q) t)))
+
+
